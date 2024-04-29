@@ -444,7 +444,8 @@ function win.On.HelpButton.Clicked(ev)
             ui:TextEdit{ID='HelpTxt', Text = [[ 
             <h2>API_Key</h2>
             <p>Obtain your API key from <a href="https://stability.ai">stability.ai</a></p>
-            
+            <h2>Save Path</h2>
+            <p>Copy image file path manually to location.</p>
             <h2>Negative_Prompt</h2>
             <p>This parameter does not work with sd3-turbo.</p>
             ]],ReadOnly = true,            
