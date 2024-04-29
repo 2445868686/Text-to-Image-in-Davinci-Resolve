@@ -70,4 +70,5 @@
 
 ## 支持
 拥抱开源和人工智能，致力于AI人工智能的实际应用。所有软件均为开源且免费。如果您支持我的工作，欢迎成为赞助者。
+
 <img width="430" alt="A031269C-141F-4338-95F1-6018D40E0A3F" src="https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/a17d3ade-7486-4b3f-9b19-1d2d0c4b6945">
