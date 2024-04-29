@@ -1,7 +1,7 @@
 # Text to Image Generator for DaVinci Resolve
 
 ## 介绍
-这是一个专门为视频编辑和后期制作软件DaVinci Resolve设计的Lua脚本。借助于最新的SD3.0、SD3-Turbo、SDXL等模型，这个脚本能够调用 [Stability AI](https://stability.ai/) API生成高质量的图片，并将这些图片导入到DaVinci Resolve的媒体池中。特别适用于视频制作人和视觉艺术家，他们需要快速生成并应用大量图像素材，从而提升创作效率并丰富视觉效果。
+这是一个专门为视频编辑和后期制作软件DaVinci Resolve设计的Lua脚本。借助于最新的SD3.0、SD3-Turbo、SDXL等模型，这个脚本能够调用 [Stability AI](https://stability.ai/) API生成高质量的图片，并将这些图片导入到DaVinci Resolve的媒体池中。特别适用于视频制作人和视觉艺术家，他们需要快速生成并应用大量图像素材，从而提升创作效率并丰富视觉效果。<br>
 <img width="1920" alt="截屏2024-04-29 08 55 21" src="https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/c58d68c3-5734-4498-8adf-e59d80a99d03">
 <div align="center">
    DaVinci Resolve界面
