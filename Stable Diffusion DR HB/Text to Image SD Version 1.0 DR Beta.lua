@@ -71,7 +71,7 @@ function generateImageFromStabilityAI(settings,engine_id)
     
     local data = {
         text_prompts = {{
-            text = settings.prompt
+            text = settings.prompt:gsub('"', '\\"'):gsub("'", '\\"')
         }},
         cfg_scale = settings.cfg_scale,
         height = settings.height,

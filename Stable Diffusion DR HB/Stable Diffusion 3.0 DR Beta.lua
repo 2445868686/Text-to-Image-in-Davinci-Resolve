@@ -86,8 +86,8 @@ function generateImageFromStabilityAI(settings)
         '-o "%s"',
         url,
         settings.api_key,
-        settings.prompt:gsub('"', '\\"'),  -- Escape double quotes in the prompt
-        settings.negative_prompt:gsub('"', '\\"'),  -- Escape double quotes in the negative prompt
+        settings.prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
+        settings.negative_prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
         settings.seed,
         settings.aspect_ratio,
         settings.output_format,

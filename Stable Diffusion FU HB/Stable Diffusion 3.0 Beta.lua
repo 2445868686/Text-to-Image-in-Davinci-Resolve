@@ -47,8 +47,8 @@ function generateImageFromStabilityAI(settings)
         '-o "%s"',
         url,
         settings.api_key,
-        settings.prompt:gsub('"', '\\"'),  -- Escape double quotes in the prompt
-        settings.negative_prompt:gsub('"', '\\"'),  -- Escape double quotes in the negative prompt
+        settings.prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
+        settings.negative_prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
         settings.seed,
         settings.aspect_ratio,
         settings.output_format,
@@ -58,8 +58,8 @@ function generateImageFromStabilityAI(settings)
     
 
     print("Executing command: " .. curl_command)
-    print("\nPrompt:" , settings.prompt , "\nnegative_prompt:" , settings.negative_prompt , "\nmodel:" , settings.model , "\nSeed:" , settings.seed , "\naspect_ratio:" , settings.aspect_ratio , "\noutput_format:" , settings.output_format)
-    print("\nGenerating image...")
+   -- print("api:",settings.api_key,"\nPrompt:",settings.prompt,"\nSeed:",settings.seed,"\ncfg:",settings.cfg_scale,"\nsampler:",settings.sampler,"\nwidth:",settings.width,"\nheight:",settings.height,"\nsamples:",settings.samples,"\nsteps:",settings.steps)
+    print("Generating image...")
     
     -- 执行 curl 命令，并获取返回状态
     local success, _, exit_status = os.execute(curl_command)
@@ -196,7 +196,7 @@ local win = disp:AddWindow({
 
     ID = 'MyWin',
     WindowTitle = 'Text to Image SD3',
-    Geometry = {700, 300, 400, 450},
+    Geometry = {100, 100, 400, 400},
     Spacing = 10,
 
     ui:VGroup {

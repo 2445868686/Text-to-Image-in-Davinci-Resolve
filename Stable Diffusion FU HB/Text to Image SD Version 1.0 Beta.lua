@@ -33,7 +33,7 @@ function generateImageFromStabilityAI(settings,engine_id)
     
     local data = {
         text_prompts = {{
-            text = settings.prompt
+            text = settings.prompt:gsub('"', '\\"'):gsub("'", '\\"')
         }},
         cfg_scale = settings.cfg_scale,
         height = settings.height,
@@ -78,7 +78,7 @@ function generateImageFromStabilityAI(settings,engine_id)
 
     if success and exit_status == 0 then
         updateStatus("Image generated successfully.")
-        print("["..exit_status.."]".."Success".."\noutput_file:"..output_file)
+        print("["..exit_status.."]".."Success".."output_file:"..output_file)
         loadImageInFusion(output_file)
     else
         updateStatus("Failed to generate image"..exit_status)
@@ -196,8 +196,8 @@ local defaultSettings = {
     prompt = '',
     seed = '0',
     cfg_scale = '7',
-    height = '512',
-    width = '512',
+    height = '1024',
+    width = '1024',
     sampler = 0,
     samples = '1',
     steps = '30',
@@ -211,7 +211,7 @@ local win = disp:AddWindow({
 
     ID = 'MyWin',
     WindowTitle = 'Text to Image SD Version 1.0',
-    Geometry = {700, 300, 400, 450},
+    Geometry = {100, 100, 350, 400},
     Spacing = 10,
 
     ui:VGroup {
