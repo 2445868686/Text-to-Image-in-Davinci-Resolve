@@ -397,7 +397,8 @@ function updateStatus(message)
 end
 
 if savedSettings then
-
+    itm.DRCheckBox.Checked = savedSettings.use_dr == nil and defaultSettings.use_dr or savedSettings.use_dr
+    itm.FUCheckBox.Checked = savedSettings.use_fu == nil and defaultSettings.use_fu or savedSettings.use_fu
     itm.ApiKey.Text = savedSettings.api_key or defaultSettings.api_key
     itm.PromptTxt.PlainText = savedSettings.prompt or defaultSettings.prompt
     itm.NegativePromptTxt.PlainText = savedSettings.negative_prompt or defaultSettings.negative_prompt
@@ -408,6 +409,11 @@ if savedSettings then
     itm.OutputFormatCombo.CurrentIndex = savedSettings.output_format or defaultSettings.output_format
     itm.Path.Text = savedSettings.output_directory or  defaultSettings.output_directory
 
+end
+
+if itm.FUCheckBox.Checked then
+    itm.Path.ReadOnly = true
+    itm.Path.PlaceholderText = "No need to specify Save Path."
 end
 
 function win.On.GenerateButton.Clicked(ev)
@@ -483,7 +489,8 @@ end
 function CloseAndSave()
 
     local settings = {
-
+        use_dr = itm.DRCheckBox.Checked,
+        use_fu = itm.FUCheckBox.Checked,
         api_key = itm.ApiKey.Text,
         prompt = itm.PromptTxt.PlainText,
         negative_prompt = itm.NegativePromptTxt.PlainText,
@@ -514,7 +521,7 @@ function win.On.HelpButton.Clicked(ev)
             <h2>API_Key</h2>
             <p>Obtain your API key from <a href="https://stability.ai">stability.ai</a></p>
             <h2>Save Path</h2>
-            <p>Copy image file path manually to location.</p>
+            <p>Manually copy the generated image's save path here.</p>
             
             <h2>Negative_Prompt</h2>
             <p>This parameter does not work with sd3-turbo.</p>

@@ -196,12 +196,13 @@ function saveSettings(settings)
     end
 end
 
-local savedSettings = loadSettings() -- 尝试加载已保存的设置
+
 
 local defaultSettings = {
 
     use_dr = true,
     use_fu = false,
+    output_directory= '',
     api_key = '',
     prompt = '',
     seed = '0',
@@ -215,6 +216,7 @@ local defaultSettings = {
     model = 0,
 
 }
+local savedSettings = loadSettings() -- 尝试加载已保存的设置
 
 local win = disp:AddWindow({
 
@@ -423,18 +425,25 @@ function updateStatus(message)
 end
 
 if savedSettings then
+    itm.DRCheckBox.Checked = savedSettings.use_dr == nil and defaultSettings.use_dr or savedSettings.use_dr
+    itm.FUCheckBox.Checked = savedSettings.use_fu == nil and defaultSettings.use_fu or savedSettings.use_fu
     itm.ApiKey.Text = savedSettings.api_key or defaultSettings.api_key
     itm.PromptTxt.PlainText = savedSettings.prompt or defaultSettings.prompt
     itm.Seed.Text = tostring(savedSettings.seed or defaultSettings.seed)
     itm.CfgScale.Text = tostring(savedSettings.cfg_scale or defaultSettings.cfg_scale)
     itm.Height.Text = tostring(savedSettings.height or defaultSettings.height)
     itm.Width.Text = tostring(savedSettings.width or defaultSettings.width)
-    itm.Path.Text = tostring(savedSettings.path or defaultSettings.path)
+    itm.Path.Text = savedSettings.output_directory or defaultSettings.output_directory
     itm.Samples.Text = tostring(savedSettings.samples or defaultSettings.samples)
     itm.Steps.Text = tostring(savedSettings.steps or defaultSettings.steps)
     itm.RandomSeed.Checked = savedSettings.use_random_seed 
     itm.ModelCombo.CurrentIndex = savedSettings.model or defaultSettings.model
     itm.SamplerCombo.CurrentIndex = savedSettings.sampler or defaultSettings.sampler
+end
+
+if itm.FUCheckBox.Checked then
+    itm.Path.ReadOnly = true
+    itm.Path.PlaceholderText = "No need to specify Save Path."
 end
 
 function win.On.GenerateButton.Clicked(ev)
@@ -475,7 +484,7 @@ function win.On.GenerateButton.Clicked(ev)
     end
     itm.Seed.Text = tostring(newseed) -- 更新界面上的显示
     local settings = {
-        use_dr = itm.DRCheckBox.Checked,
+    --    use_dr = itm.DRCheckBox.Checked,
         api_key = itm.ApiKey.Text,
         prompt = itm.PromptTxt.PlainText,
         sampler = itm.SamplerCombo.CurrentText,
@@ -508,13 +517,15 @@ end
 
 function CloseAndSave()
     local settings = {
+        use_dr = itm.DRCheckBox.Checked,
+        use_fu = itm.FUCheckBox.Checked,
         api_key = itm.ApiKey.Text,
         prompt = itm.PromptTxt.PlainText,
         seed = tonumber(itm.Seed.Text),
         cfg_scale = tonumber(itm.CfgScale.Text),
         height = tonumber(itm.Height.Text),
         width = tonumber(itm.Width.Text),
-        path = itm.Path.Text,
+        output_directory = itm.Path.Text,
         sampler = itm.SamplerCombo.CurrentIndex,
         model = itm.ModelCombo.CurrentIndex ,
         samples = tonumber(itm.Samples.Text),
@@ -536,7 +547,7 @@ function win.On.ResetButton.Clicked(ev)
     itm.ModelCombo.CurrentIndex = defaultSettings.model
     itm.SamplerCombo.CurrentIndex = defaultSettings.sampler
     itm.Seed.Text = defaultSettings.seed
-    itm.Path.Text = defaultSettings.path
+    itm.Path.Text = defaultSettings.output_directory
     itm.CfgScale.Text = defaultSettings.cfg_scale
     itm.Height.Text = defaultSettings.height
     itm.Width.Text = defaultSettings.width
@@ -562,7 +573,7 @@ function win.On.HelpButton.Clicked(ev)
             <h2>API_Key</h2>
             <p>Obtain your API key from <a href="https://stability.ai">stability.ai</a></p>
             <h2>Save Path</h2>
-            <p>Copy image file path manually to location.</p>
+            <p>Manually copy the generated image's save path here.</p>
             
             <h2>Using SDXL 1.0</h2>
             <p>When using SDXL 1.0, ensure the height and width you input match one of the following combinations:</p>
