@@ -24,16 +24,12 @@
   
   `Win：C:\ProgramData\Blackmagic Design\Fusion\Scripts\Comp`
 ## 使用
-<img width="1428" alt="image" src="https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/61d071c7-9337-4fe2-abe7-bf0eeca7f5ec">
+<img width="957" alt="截屏2024-05-10 10 55 30" src="https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/594d8780-f315-4f56-952e-58671561059a">
 
 
 
 **API_Key：** <br>
-请从  [Stability AI](https://stability.ai/)  获取您的 API 密钥，目前注册赠送25积分,使用SD Version 1.0可以免费生成125～200张图片。 <br>
-
-**Save Path：** <br>
-图片保存路径，手动复制至此。 <br>
-
+请从  [Stability AI](https://stability.ai/)  获取您的 API 密钥，注册赠送25积分,使用`SD1.6`、`SDXL1.0`可以免费生成125～200张图片。 <br>
 
 ### Stable Diffusion 3.0 
 
