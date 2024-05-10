@@ -221,7 +221,7 @@ local savedSettings = loadSettings() -- 尝试加载已保存的设置
 local win = disp:AddWindow({
 
     ID = 'MyWin',
-    WindowTitle = 'Text to Image SD Version 1.0',
+    WindowTitle = 'Text to Image SD Version 1.2',
     Geometry = {700, 300, 400, 450},
     Spacing = 10,
     
@@ -246,7 +246,8 @@ local win = disp:AddWindow({
 
             Weight = 1,
             ui:Label {ID = 'PathLabel', Text = 'Save Path',Alignment = { AlignRight = false },Weight = 0.2},
-            ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.8},
+            ui:Button{ ID = 'browse', Text = 'Browse', Weight = 0.2, },
+            ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
  
         },
 
@@ -364,12 +365,8 @@ function win.On.DRCheckBox.Clicked(ev)
     itm.FUCheckBox.Checked = not itm.DRCheckBox.Checked
     if itm.FUCheckBox.Checked then
         print("Using in Fusion Studio")
-        itm.Path.PlaceholderText = "No need to specify Save Path."
-        itm.Path.ReadOnly = true
     else
         print("Using in DaVinci Resolve")
-        itm.Path.PlaceholderText = ""
-        itm.Path.ReadOnly = false
     end
 end
 
@@ -377,12 +374,8 @@ function win.On.FUCheckBox.Clicked(ev)
     itm.DRCheckBox.Checked = not itm.FUCheckBox.Checked
     if itm.FUCheckBox.Checked then
         print("Using in Fusion Studio")
-        itm.Path.PlaceholderText = "No need to specify Save Path."
-        itm.Path.ReadOnly = true
     else
         print("Using in DaVinci Resolve")
-        itm.Path.PlaceholderText = ""
-        itm.Path.ReadOnly = false
     end
 end
 
@@ -441,40 +434,8 @@ if savedSettings then
     itm.SamplerCombo.CurrentIndex = savedSettings.sampler or defaultSettings.sampler
 end
 
-if itm.FUCheckBox.Checked then
-    itm.Path.ReadOnly = true
-    itm.Path.PlaceholderText = "No need to specify Save Path."
-end
 
 function win.On.GenerateButton.Clicked(ev)
-    if itm.FUCheckBox.Checked then
-    -- 检查当前合成文件是否已保存
-        local current_file_path = comp:GetAttrs().COMPS_FileName
-        if not current_file_path or current_file_path == '' then
-            -- 文件未保存，显示警告对话框
-            local msgbox = disp:AddWindow({
-                ID = 'msg',
-                WindowTitle = 'Warning',
-                Geometry = {400, 300, 300, 100},
-                Spacing = 10,
-                ui:VGroup {
-                    ui:Label {ID = 'WarningLabel', Text = 'Please save your composition file first.',  },
-                    ui:HGroup {
-                        Weight = 0,
-                        ui:Button {ID = 'OkButton', Text = 'OK'},
-                    },
-                },
-            })
-            -- 处理确定按钮点击事件
-            function msgbox.On.OkButton.Clicked(ev)
-                disp:ExitLoop()
-            end
-            msgbox:Show()
-            disp:RunLoop() 
-            msgbox:Hide()
-            return
-        end
-    end
 
     local newseed
     if itm.RandomSeed.Checked then
@@ -497,9 +458,6 @@ function win.On.GenerateButton.Clicked(ev)
         output_directory =  itm.Path.Text 
 
     }
-    if not itm.DRCheckBox.Checked then
-        settings.output_directory = comp:GetAttrs().COMPS_FileName:match("(.+[\\/])")
-    end
 
     print(settings.output_directory )
     -- 执行图片生成和加载操作
@@ -572,8 +530,6 @@ function win.On.HelpButton.Clicked(ev)
             ui:TextEdit{ID='HelpTxt', Text = [[ 
             <h2>API_Key</h2>
             <p>Obtain your API key from <a href="https://stability.ai">stability.ai</a></p>
-            <h2>Save Path</h2>
-            <p>Manually copy the generated image's save path here.</p>
             
             <h2>Using SDXL 1.0</h2>
             <p>When using SDXL 1.0, ensure the height and width you input match one of the following combinations:</p>
@@ -615,6 +571,14 @@ function win.On.MyWin.Close(ev)
     disp:ExitLoop()
     CloseAndSave()
 
+end
+
+
+function win.On.browse.Clicked(ev)
+    local currentPath = itm.Path.Text
+    local selectedPath
+    selectedPath =tostring(fu:RequestDir(currentPath))
+    itm.Path.Text = selectedPath
 end
 
 win:Show()
