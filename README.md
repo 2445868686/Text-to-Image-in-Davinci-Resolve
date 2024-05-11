@@ -11,14 +11,14 @@
 ## 安装
 ### DaVinci Resolve 版本安装：
 
-将`Stable Diffusion HB`文件夹移动到以下位置：
+将`Stability AI 1.0`文件夹移动到以下位置：
 
   `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Edit`
   
   `Win：C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Edit`
 
 ###  Fusion Studio 版本安装：
-将`Stable Diffusion HB`文件夹移动到以下位置：
+将`Stability AI 1.0`文件夹移动到以下位置：
 
   `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/Fusion/Scripts/Comp`
   
@@ -28,15 +28,19 @@
 
 
 
+
+### Stable-Image-Generate
 **API_Key：** <br>
 请从  [Stability AI](https://stability.ai/)  获取您的 API 密钥，注册赠送25积分,使用`SD1.6`、`SDXL1.0`可以免费生成125～200张图片。 <br>
 
-### Stable Diffusion 3.0 
+**Style_Preset：** <br>
+此参数只适用于 `Core` 模型。 <br>
 
 **Negative_Prompt：** <br>
-此参数不适用于 sd3-turbo。 <br>
+此参数不适用于 `sd3-turbo` 模型。 <br>
 
-### SD Version 1.0
+
+### Text-to-Image-SD
 
 ***使用 SD 1.6***<br>
 在使用 SD 1.6 时，请确保您设置的高度和宽度满足以下条件：
