@@ -118,9 +118,8 @@ function generateImageFromStabilityAI(settings,engine_id)
         )
     end
 
-    print(output_file)
     print("Executing command: " .. curl_command)
-    print("api:",settings.api_key,"\nPrompt:",settings.prompt,"\nSeed:",settings.seed,"\ncfg:",settings.cfg_scale,"\nsampler:",settings.sampler,"\nwidth:",settings.width,"\nheight:",settings.height,"\nsamples:",settings.samples,"\nsteps:",settings.steps)
+    print("\nPrompt:",settings.prompt,"\nSeed:",settings.seed,"\ncfg:",settings.cfg_scale,"\nsampler:",settings.sampler,"\nwidth:",settings.width,"\nheight:",settings.height,"\nsamples:",settings.samples,"\nsteps:",settings.steps,"\nFile_Name:",output_file)
     print("Generating image...")
     
     -- 执行 curl 命令，并获取返回状态
@@ -221,7 +220,7 @@ local savedSettings = loadSettings() -- 尝试加载已保存的设置
 local win = disp:AddWindow({
 
     ID = 'MyWin',
-    WindowTitle = 'Text to Image SD Version 1.2',
+    WindowTitle = 'Text to Image SD Version 1.0',
     Geometry = {700, 300, 400, 450},
     Spacing = 10,
     
@@ -393,17 +392,11 @@ function win.On.ModelCombo.CurrentIndexChanged(ev)
     end
   end
 
-itm.SamplerCombo:AddItem('DDIM')
-itm.SamplerCombo:AddItem('DDPM')
-itm.SamplerCombo:AddItem('K_DPMPP_2M')
-itm.SamplerCombo:AddItem('K_DPMPP_2S_ANCESTRAL')
-itm.SamplerCombo:AddItem('K_DPM_2')
-itm.SamplerCombo:AddItem('K_DPM_2_ANCESTRAL')
-itm.SamplerCombo:AddItem('K_EULER')
-itm.SamplerCombo:AddItem('K_EULER_ANCESTRAL')
-itm.SamplerCombo:AddItem('K_HEUN')
-itm.SamplerCombo:AddItem('K_LMS')
 
+local samplers ={'DDIM','DDPM','K_DPMPP_2M','K_DPMPP_2S_ANCESTRAL','K_DPM_2','K_DPM_2_ANCESTRAL','K_EULER','K_EULER_ANCESTRAL','K_HEUN','K_LMS'}
+for _, style in ipairs(samplers) do
+    itm.SamplerCombo:AddItem(style)
+end
 
 function win.On.SamplerCombo.CurrentIndexChanged(ev)
     print('Using Sampler:' .. itm.SamplerCombo.CurrentText )
@@ -436,6 +429,31 @@ end
 
 
 function win.On.GenerateButton.Clicked(ev)
+    if itm.Path.Text == '' then
+        local current_file_path = comp:GetAttrs().COMPS_FileName
+        if not current_file_path or current_file_path == '' then
+            local msgbox = disp:AddWindow({
+                ID = 'msg',
+                WindowTitle = 'Warning',
+                Geometry = {750, 400, 300, 100},
+                Spacing = 10,
+                ui:VGroup {
+                    ui:Label {ID = 'WarningLabel', Text = 'Please select the image save path.',  },
+                    ui:HGroup {
+                        Weight = 0,
+                        ui:Button {ID = 'OkButton', Text = 'OK'},
+                    },
+                },
+            })
+            function msgbox.On.OkButton.Clicked(ev)
+                disp:ExitLoop()
+            end
+            msgbox:Show()
+            disp:RunLoop() 
+            msgbox:Hide()
+            return
+        end
+    end
 
     local newseed
     if itm.RandomSeed.Checked then
@@ -459,12 +477,10 @@ function win.On.GenerateButton.Clicked(ev)
 
     }
 
-    print(settings.output_directory )
     -- 执行图片生成和加载操作
     local image_path  = ''
     image_path =  generateImageFromStabilityAI(settings,engine_id)
     if image_path then
-        print("image_path:"..image_path)
         if itm.DRCheckBox.Checked then
             AddToMediaPool(image_path)  
         else
@@ -576,9 +592,12 @@ end
 
 function win.On.browse.Clicked(ev)
     local currentPath = itm.Path.Text
-    local selectedPath
-    selectedPath =tostring(fu:RequestDir(currentPath))
-    itm.Path.Text = selectedPath
+    local selectedPath = fu:RequestDir(currentPath)
+    if selectedPath then
+        itm.Path.Text = tostring(selectedPath)
+    else
+        print("No directory selected or the request failed.")
+    end
 end
 
 win:Show()

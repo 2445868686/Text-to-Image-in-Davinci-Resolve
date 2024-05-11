@@ -50,9 +50,8 @@ function loadImageInFusion(image_path)
 
 end
 
-function generateImageFromStabilityAI(settings)
+function Generate_Stable_Image(settings)
     updateStatus("Generating image...")
-    local url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
     local count = 0
     local output_file
     local file_exists
@@ -76,36 +75,69 @@ function generateImageFromStabilityAI(settings)
         if file then file:close() end
     until not file_exists
 
-    local curl_command = string.format(
-        'curl -f -sS -X POST "%s" ' ..
-        '-H "Authorization: Bearer %s" ' ..
-        '-H "Accept: image/*" ' ..
-        '-F mode="text-to-image" ' ..
-        '-F prompt="%s" ' ..
-        '-F negative_prompt="%s" ' ..
-        '-F seed=%d ' ..
-        '-F aspect_ratio="%s" ' ..
-        '-F output_format="%s" ' ..
-        '-F model="%s" ' ..
-        '-o "%s"',
-        url,
-        settings.api_key,
-        settings.prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
-        settings.negative_prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
-        settings.seed,
-        settings.aspect_ratio,
-        settings.output_format,
-        settings.model,
-        output_file
-    )
-    
+    local url
+    local curl_command
 
+    if settings.model == "core" then
+        url = "https://api.stability.ai/v2beta/stable-image/generate/core"
+        curl_command = string.format(
+            'curl -f -sS -X POST "%s" ' ..
+            '-H "Authorization: Bearer %s" ' ..
+            '-H "Accept: image/*" ' ..
+            '-F mode="text-to-image" ' ..
+            '-F prompt="%s" ' ..
+            '-F negative_prompt="%s" ' ..
+            '-F seed=%d ' ..
+            '-F aspect_ratio="%s" ' ..
+            '-F output_format="%s" ',
+            url,
+            settings.api_key,
+            settings.prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
+            settings.negative_prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
+            settings.seed,
+            settings.aspect_ratio,
+            settings.output_format
+        )
+        if settings.style_preset ~= '' then
+            curl_command = curl_command .. string.format('-F style_preset="%s" ', settings.style_preset)
+        end
+        
+        curl_command = curl_command .. string.format('-o "%s"', output_file)
+
+    elseif settings.model == "sd3" or settings.model == "sd3-turbo" then
+        url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+        curl_command = string.format(
+            'curl -f -sS -X POST "%s" ' ..
+            '-H "Authorization: Bearer %s" ' ..
+            '-H "Accept: image/*" ' ..
+            '-F mode="text-to-image" ' ..
+            '-F prompt="%s" ' ..
+            '-F negative_prompt="%s" ' ..
+            '-F seed=%d ' ..
+            '-F aspect_ratio="%s" ' ..
+            '-F output_format="%s" ' ..
+            '-F model="%s" ' ..
+            '-o "%s"',
+            url,
+            settings.api_key,
+            settings.prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
+            settings.negative_prompt:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
+            settings.seed,
+            settings.aspect_ratio,
+            settings.output_format,
+            settings.model,
+            output_file
+        )
+
+    else
+        updateStatus("Invalid model specified.")
+        return nil
+    end
     print("Executing command: " .. curl_command)
-    print("\nPrompt:" , settings.prompt , "\nnegative_prompt:" , settings.negative_prompt , "\nmodel:" , settings.model , "\nSeed:" , settings.seed , "\naspect_ratio:" , settings.aspect_ratio , "\noutput_format:" , settings.output_format)
-    print("\nGenerating image...")
-    
-    local success, _, exit_status = os.execute(curl_command)
+    print("\nPrompt:",settings.prompt,"\nNegative_Prompt:",settings.negative_prompt,"\nStyle_Preset:",settings.style_preset,"\nSeed:",settings.seed,"\nAspect_Ratio:",settings.aspect_ratio,"\nOutput_Format:",settings.output_format,"\nFile_Name:",output_file)
+    print("Generating image...")
 
+    local success, _, exit_status = os.execute(curl_command)
     if success and exit_status == 0 then
         updateStatus("Image generated successfully.")
         print("["..exit_status.."]".."Success".."\noutput_file:"..output_file)
@@ -143,9 +175,9 @@ end
 local script_path = getScriptPath()
 local settings_file ='' 
 if os_name == '\\' then
-    settings_file = script_path .. '\\SD3_settings.json' 
+    settings_file = script_path .. '\\Stable_Image_Generate_settings.json' 
 else
-    settings_file = script_path .. '/SD3_settings.json' 
+    settings_file = script_path .. '/Stable_Image_Generate_settings.json' 
 end
 checkOrCreateFile(settings_file)
 
@@ -192,6 +224,7 @@ local defaultSettings = {
     api_key = '',
     prompt = '',
     negative_prompt= '',
+    style_preset = 0,
     aspect_ratio= 0 ,
     model = 0,
     seed = '0',
@@ -204,8 +237,8 @@ local defaultSettings = {
 local win = disp:AddWindow({
 
     ID = 'MyWin',
-    WindowTitle = 'Text to Image SD3 Version 1.2',
-    Geometry = {700, 300, 400, 450},
+    WindowTitle = 'Stable Image Generate Version 1.0',
+    Geometry = {700, 300, 400, 470},
     Spacing = 10,
 
     ui:VGroup {
@@ -233,7 +266,13 @@ local win = disp:AddWindow({
             ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
             
         },
+        ui:HGroup {
 
+            Weight = 1,
+            ui:Label {ID = 'ModelLabel', Text = 'Model',Alignment = { AlignRight = false },Weight = 0.2},
+            ui:ComboBox{ID = 'ModelCombo', Text = 'Model',Weight = 0.8},
+
+        },
         ui:HGroup {
 
             Weight = 1,
@@ -249,19 +288,18 @@ local win = disp:AddWindow({
             ui:TextEdit{ID='NegativePromptTxt', Text = ' ', PlaceholderText = 'Please Enter a Negative Prompt.',Weight = 0.8}
 
         },
-
         ui:HGroup {
 
             Weight = 1,
-            ui:Label {ID = 'AspectRatioLabel', Text = 'Aspect Ratio',Alignment = { AlignRight = false },Weight = 0.2},
-            ui:ComboBox{ID = 'AspectRatioCombo', Text = 'aspect_ratio',Weight = 0.8},
+            ui:Label {ID = 'StyleLabel', Text = 'Style_Preset',Alignment = { AlignRight = false },Weight = 0.2},
+            ui:ComboBox{ID = 'StyleCombo', Text = 'Style_Preset',Weight = 0.8},
 
         },
         ui:HGroup {
 
             Weight = 1,
-            ui:Label {ID = 'ModelLabel', Text = 'Model',Alignment = { AlignRight = false },Weight = 0.2},
-            ui:ComboBox{ID = 'ModelCombo', Text = 'Model',Weight = 0.8},
+            ui:Label {ID = 'AspectRatioLabel', Text = 'Aspect Ratio',Alignment = { AlignRight = false },Weight = 0.2},
+            ui:ComboBox{ID = 'AspectRatioCombo', Text = 'aspect_ratio',Weight = 0.8},
 
         },
         ui:HGroup {
@@ -328,21 +366,25 @@ local win = disp:AddWindow({
 
 itm = win:GetItems()
 
-itm.ModelCombo:AddItem('SD3')
-itm.ModelCombo:AddItem('SD3-Turbo')
+local MOdel = {'Core','SD3','SD3 Turbo'}
+for _, modeL in ipairs(MOdel) do
+    itm.ModelCombo:AddItem(modeL)
+end
 
-itm.AspectRatioCombo:AddItem('1:1')
-itm.AspectRatioCombo:AddItem('16:9')
-itm.AspectRatioCombo:AddItem('21:9')
-itm.AspectRatioCombo:AddItem('2:3')
-itm.AspectRatioCombo:AddItem('3:2')
-itm.AspectRatioCombo:AddItem('4:5')
-itm.AspectRatioCombo:AddItem('5:4')
-itm.AspectRatioCombo:AddItem('9:16')
-itm.AspectRatioCombo:AddItem('9:21')
+local stylePreset ={'','3d-model','analog-film','anime','cinematic','comic-book','digital-art','enhance','fantasy-art','isometric','line-art','low-poly','modeling-compound','neon-punk','origami','photographic','pixel-art','tile-texture',}
+for _, style in ipairs(stylePreset) do
+    itm.StyleCombo:AddItem(style)
+end
 
-itm.OutputFormatCombo:AddItem('png')
-itm.OutputFormatCombo:AddItem('jpeg')
+local aspectRatios = {'1:1', '16:9', '21:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:21'}
+for _, ratio in ipairs(aspectRatios) do
+    itm.AspectRatioCombo:AddItem(ratio)
+end
+
+local outputFormat = {'png','jpeg',}
+for _, format in ipairs(outputFormat) do
+    itm.OutputFormatCombo:AddItem(format)
+end
 
 function win.On.DRCheckBox.Clicked(ev)
     itm.FUCheckBox.Checked = not itm.DRCheckBox.Checked
@@ -367,10 +409,22 @@ end
 
 local model_id
 function win.On.ModelCombo.CurrentIndexChanged(ev)
+    itm.NegativePromptTxt.ReadOnly = false
+    for _, style in ipairs(stylePreset) do
+        itm.StyleCombo:RemoveItem(0)
+    end
     if itm.ModelCombo.CurrentIndex == 0 then
+        model_id = 'core'
+        print('Using Model:' .. model_id)
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:AddItem(style)
+        end
+    elseif itm.ModelCombo.CurrentIndex == 1 then
         model_id = 'sd3'
         print('Using Model:' .. model_id)
-    else
+    elseif itm.ModelCombo.CurrentIndex == 2 then
+        itm.NegativePromptTxt.ReadOnly = true
+        itm.NegativePromptTxt.Text = ''
         model_id = 'sd3-turbo'
         print('Using Model:' .. model_id )
     end
@@ -398,6 +452,7 @@ if savedSettings then
     itm.ApiKey.Text = savedSettings.api_key or defaultSettings.api_key
     itm.PromptTxt.PlainText = savedSettings.prompt or defaultSettings.prompt
     itm.NegativePromptTxt.PlainText = savedSettings.negative_prompt or defaultSettings.negative_prompt
+    itm.StyleCombo.CurrentIndex = savedSettings.style_preset or defaultSettings.style_preset
     itm.Seed.Text = tostring(savedSettings.seed or defaultSettings.seed)
     itm.RandomSeed.Checked = savedSettings.use_random_seed 
     itm.ModelCombo.CurrentIndex = savedSettings.model or defaultSettings.model
@@ -409,6 +464,31 @@ end
 
 
 function win.On.GenerateButton.Clicked(ev)
+    if itm.Path.Text == '' then
+        local current_file_path = comp:GetAttrs().COMPS_FileName
+        if not current_file_path or current_file_path == '' then
+            local msgbox = disp:AddWindow({
+                ID = 'msg',
+                WindowTitle = 'Warning',
+                Geometry = {750, 400, 300, 100},
+                Spacing = 10,
+                ui:VGroup {
+                    ui:Label {ID = 'WarningLabel', Text = 'Please select the image save path.',  },
+                    ui:HGroup {
+                        Weight = 0,
+                        ui:Button {ID = 'OkButton', Text = 'OK'},
+                    },
+                },
+            })
+            function msgbox.On.OkButton.Clicked(ev)
+                disp:ExitLoop()
+            end
+            msgbox:Show()
+            disp:RunLoop() 
+            msgbox:Hide()
+            return
+        end
+    end
 
     local newseed
     if itm.RandomSeed.Checked then
@@ -425,6 +505,7 @@ function win.On.GenerateButton.Clicked(ev)
         api_key = itm.ApiKey.Text,
         prompt = itm.PromptTxt.PlainText,
         negative_prompt = itm.NegativePromptTxt.PlainText,
+        style_preset = itm.StyleCombo.CurrentText,
         aspect_ratio = itm.AspectRatioCombo.CurrentText,
         output_format = itm.OutputFormatCombo.CurrentText,
         model = model_id ,
@@ -432,13 +513,10 @@ function win.On.GenerateButton.Clicked(ev)
         output_directory = itm.Path.Text,
 
     }
-
-    print(settings.output_directory )
     -- 执行图片生成和加载操作
     local image_path  = ''
-    image_path =  generateImageFromStabilityAI(settings)
+    image_path =  Generate_Stable_Image(settings)
     if image_path then
-        print("image_path:"..image_path)
         if itm.DRCheckBox.Checked then
             AddToMediaPool(image_path)  
         else
@@ -457,6 +535,7 @@ function CloseAndSave()
         api_key = itm.ApiKey.Text,
         prompt = itm.PromptTxt.PlainText,
         negative_prompt = itm.NegativePromptTxt.PlainText,
+        style_preset = itm.StyleCombo.CurrentIndex,
         seed = tonumber(itm.Seed.Text),
         aspect_ratio = itm.AspectRatioCombo.CurrentIndex,
         output_format = itm.OutputFormatCombo.CurrentIndex,
@@ -485,7 +564,12 @@ function win.On.HelpButton.Clicked(ev)
             <p>Obtain your API key from <a href="https://stability.ai">stability.ai</a></p>
             
             <h2>Negative_Prompt</h2>
-            <p>This parameter does not work with sd3-turbo.</p>
+            <p>This parameter does not work with SD3-Turbo model.</p>
+
+            <h2>Style_Preset</h2>
+            <p>This parameter is applicable exclusively to the Core model.</p>
+
+
             ]],ReadOnly = true,            
 
             },
@@ -512,6 +596,7 @@ function win.On.ResetButton.Clicked(ev)
     itm.Path.ReadOnly = false
     itm.Path.PlaceholderText = ''
     itm.NegativePromptTxt.PlainText = defaultSettings.negative_prompt
+    itm.StyleCombo.CurrentIndex = defaultSettings.style_preset
     itm.Seed.Text = defaultSettings.seed
     itm.ModelCombo.CurrentIndex = defaultSettings.model
     itm.OutputFormatCombo.CurrentIndex = defaultSettings.output_format
@@ -519,7 +604,6 @@ function win.On.ResetButton.Clicked(ev)
     itm.RandomSeed.Checked = defaultSettings.use_random_seed
     itm.Path.Text = defaultSettings.output_directory
     updateStatus(" ")
-
 end
 
 function win.On.MyWin.Close(ev)
@@ -531,9 +615,12 @@ end
 
 function win.On.browse.Clicked(ev)
     local currentPath = itm.Path.Text
-    local selectedPath
-    selectedPath =tostring(fu:RequestDir(currentPath))
-    itm.Path.Text = selectedPath
+    local selectedPath = fu:RequestDir(currentPath)
+    if selectedPath then
+        itm.Path.Text = tostring(selectedPath)
+    else
+        print("No directory selected or the request failed.")
+    end
 end
 
 -- 显示窗口

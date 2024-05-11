@@ -1,0 +1,14 @@
+{
+  "use_fu":false,
+  "use_random_seed":true,
+  "model":0,
+  "output_directory":"",
+  "output_format":0,
+  "seed":0,
+  "api_key":"",
+  "prompt":"",
+  "use_dr":true,
+  "style_preset":0,
+  "negative_prompt":"",
+  "aspect_ratio":0
+}
