@@ -245,7 +245,7 @@ local win = disp:AddWindow({
 
             Weight = 1,
             ui:Label {ID = 'PathLabel', Text = 'Save Path',Alignment = { AlignRight = false },Weight = 0.2},
-            ui:Button{ ID = 'browse', Text = 'Browse', Weight = 0.2, },
+            ui:Button{ ID = 'Browse', Text = 'Browse', Weight = 0.2, },
             ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
  
         },
@@ -590,7 +590,7 @@ function win.On.MyWin.Close(ev)
 end
 
 
-function win.On.browse.Clicked(ev)
+function win.On.Browse.Clicked(ev)
     local currentPath = itm.Path.Text
     local selectedPath = fu:RequestDir(currentPath)
     if selectedPath then
