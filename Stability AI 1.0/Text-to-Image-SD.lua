@@ -430,29 +430,26 @@ end
 
 function win.On.GenerateButton.Clicked(ev)
     if itm.Path.Text == '' then
-        local current_file_path = comp:GetAttrs().COMPS_FileName
-        if not current_file_path or current_file_path == '' then
-            local msgbox = disp:AddWindow({
-                ID = 'msg',
-                WindowTitle = 'Warning',
-                Geometry = {750, 400, 300, 100},
-                Spacing = 10,
-                ui:VGroup {
-                    ui:Label {ID = 'WarningLabel', Text = 'Please select the image save path.',  },
-                    ui:HGroup {
-                        Weight = 0,
-                        ui:Button {ID = 'OkButton', Text = 'OK'},
-                    },
+        local msgbox = disp:AddWindow({
+            ID = 'msg',
+            WindowTitle = 'Warning',
+            Geometry = {750, 400, 300, 100},
+            Spacing = 10,
+            ui:VGroup {
+                ui:Label {ID = 'WarningLabel', Text = 'Please select the image save path.',  },
+                ui:HGroup {
+                    Weight = 0,
+                    ui:Button {ID = 'OkButton', Text = 'OK'},
                 },
-            })
-            function msgbox.On.OkButton.Clicked(ev)
-                disp:ExitLoop()
-            end
-            msgbox:Show()
-            disp:RunLoop() 
-            msgbox:Hide()
-            return
+            },
+        })
+        function msgbox.On.OkButton.Clicked(ev)
+            disp:ExitLoop()
         end
+        msgbox:Show()
+        disp:RunLoop() 
+        msgbox:Hide()
+        return
     end
 
     local newseed
