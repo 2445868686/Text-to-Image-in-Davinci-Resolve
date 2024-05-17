@@ -439,7 +439,7 @@ function win.On.OutputFormatCombo.CurrentIndexChanged(ev)
 end
 
 function win.On.OpenLinkButton.Clicked(ev)
-    bmd.openurl("https://www.paypal.me/HEIBAWK")
+    bmd.openurl("https://www.paypal.me/heiba2wk")
 end
 
 function updateStatus(message)
