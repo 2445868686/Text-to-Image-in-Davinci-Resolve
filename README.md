@@ -14,14 +14,14 @@
 
 将`Stability AI 1.0`文件夹移动到以下位置：
 
-  `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Edit`
+  `Mac：/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Edit`
   
   `Win：C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Edit`
 
 ###  Fusion Studio 版本安装：
 将`Stability AI 1.0`文件夹移动到以下位置：
 
-  `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/Fusion/Scripts/Comp`
+  `Mac：/Library/Application Support/Blackmagic Design/Fusion/Scripts/Comp`
   
   `Win：C:\ProgramData\Blackmagic Design\Fusion\Scripts\Comp`
 ## 使用
