@@ -392,15 +392,22 @@ win = dispatcher.AddWindow(
                                     {"Weight": 0.05},
                                     [
                                         ui.Label({"ID": 'PathLabel', "Text": 'Save Path', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
-                                        ui.Button({"ID": 'Browse', "Text": 'Browse', "Weight": 0.2}),
                                         ui.LineEdit({"ID": 'Path', "Text": '', "PlaceholderText": '', "ReadOnly": False, "Weight": 0.6}),
+                                        ui.Button({"ID": 'Browse', "Text": 'Browse', "Weight": 0.2}),
                                     ]
                                 ),
                                 ui.HGroup(
                                     {"Weight": 0.05},
                                     [
                                         ui.Label({"ID": 'ApiKeyLabel', "Text": 'API Key', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
-                                        ui.LineEdit({"ID": 'ApiKey', "Text": '', "EchoMode": 'Password', "Weight": 0.8}),
+                                        ui.LineEdit({"ID": 'ApiKey', "Text": '', "EchoMode": 'Password', "Weight": 0.6}),
+                                        ui.Button({"ID": 'Balance', "Text": 'Balance', "Weight": 0.2}),
+                                    ]
+                                ),
+                                ui.HGroup(
+                                    {"Weight": 0.05},
+                                    [
+                                          ui.Label({"ID": 'BalanceLabel', "Text": '',  "Alignment" : {"AlignHCenter" : True, "AlignVCenter" : True},"Weight": 0.2}),
                                     ]
                                 ),
                                 ui.HGroup(
@@ -613,6 +620,21 @@ def show_warning_message(text):
     dispatcher.RunLoop()
     msgbox.Hide()
 
+def get_remaining_credits(api_key: str) -> float:
+    api_host = 'https://api.stability.ai'
+    url = f"{api_host}/v1/user/balance"
+
+    response = requests.get(url, headers={
+        "Authorization": f"Bearer {api_key}"
+    })
+
+    if response.status_code != 200:
+        raise Exception("Non-200 response: " + str(response.text))
+
+    payload = response.json()
+    credits = payload.get("credits", 0.0)
+    return round(credits, 1)
+
 def generate_image_v1(settings, engine_id):
     update_status("Generating image...")
 
@@ -658,10 +680,11 @@ def generate_image_v1(settings, engine_id):
     response = requests.post(url, headers=headers, json=data)
 
     if response.status_code == 200:
+        credits = get_remaining_credits(settings['API_KEY'])
         with open(output_file, 'wb') as file:
             file.write(response.content)
-        update_status("Image generated successfully.")
-        print(f"Success: Image saved to {output_file}")
+        update_status(f"Image generated successfully.Credits:{credits}")
+        print(f"Success: Image saved to {output_file},\nCredits:{credits}")
         return output_file
     else:
         error_message = response.json()
@@ -720,10 +743,11 @@ def generate_image_v2(settings):
 
     response = requests.post(url, headers=headers, files={"none": ""}, data=data)
     if response.status_code == 200:
+        credits = get_remaining_credits(settings['API_KEY'])
         with open(output_file, 'wb') as file:
             file.write(response.content)
-        update_status("Image generated successfully.")
-        print(f"Success: Image saved to {output_file}")
+        update_status(f"Image generated successfully.Credits:{credits}")
+        print(f"Success: Image saved to {output_file},\nCredits:{credits}")
         return output_file
     else:
         error_message = response.json()
@@ -933,6 +957,18 @@ def on_browse_button_clicked(ev):
 # 绑定 Browse 按钮点击事件
 win.On.Browse.Clicked = on_browse_button_clicked
 
+
+def on_balance_button_clicked(ev):
+    try:
+        credits = get_remaining_credits(itm["ApiKey"].Text)
+        itm["BalanceLabel"].Text = f"Credits: {credits}"
+        print(f"Credits: {credits}")
+    except Exception as e:
+        itm["BalanceLabel"].Text = f"Invalid API key"
+        print(f"发生错误: {e}")
+
+# 绑定 Balance 按钮点击事件
+win.On.Balance.Clicked = on_balance_button_clicked
 
 def on_close(ev):
     close_and_save(settings_file)

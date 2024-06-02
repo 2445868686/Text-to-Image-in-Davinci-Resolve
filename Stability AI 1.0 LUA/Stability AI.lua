@@ -105,6 +105,28 @@ function loadImageInFusion(image_path)
 
 end
 
+function get_remaining_credits(api_key)
+    if not api_key then
+        error("API key is not provided")
+    end
+
+    local api_host = os.getenv("API_HOST") or "https://api.stability.ai"
+    local url = api_host .. "/v1/user/balance"
+
+    local command = 'curl -f -sS "' .. url .. '" -H "Content-Type: application/json" -H "Authorization: Bearer ' .. api_key .. '"'
+    local handle = io.popen(command)
+    local result = handle:read("*a")
+    handle:close()
+
+    local json = require("dkjson")
+    local payload, pos, err = json.decode(result, 1, nil)
+
+    if err then
+        error("Error parsing JSON: " .. err)
+    end
+    local credits = payload.credits or 0.0
+    return tonumber(string.format("%.1f", credits))
+end
 
 function Generate_Image_V2(settings)
     updateStatus("Generating image...")
@@ -196,8 +218,9 @@ function Generate_Image_V2(settings)
 
     local success, _, exit_status = os.execute(curl_command)
     if success and exit_status == 0 then
-        updateStatus("Image generated successfully.")
-        print("["..exit_status.."]".."Success".."\noutput_file:"..output_file)
+        local credits = get_remaining_credits(settings.API_KEY)
+        updateStatus("Image generated successfully.Credits:"..credits)
+        print("["..exit_status.."]".."Success".."\noutput_file:"..output_file.."\nCredits:"..credits)
         return output_file
     else
         updateStatus("Failed to generate image"..exit_status)
@@ -281,11 +304,12 @@ function Generate_Image_V1(settings,engine_id)
     local success, _, exit_status = os.execute(curl_command)
 
     if success and exit_status == 0 then
-        updateStatus("Image generated successfully.")
-        print("["..exit_status.."]".."Image generated successfully.".."\noutput_file:"..output_file)
+        local credits = get_remaining_credits(settings.API_KEY)
+        updateStatus("Image generated successfully.Credits:"..credits)
+        print("["..exit_status.."]".."Image generated successfully.".."\noutput_file:"..output_file.."\nCredits:"..credits)
         return output_file
     else
-        updateStatus("Failed to generate image"..exit_status)
+        updateStatus("Failed to generate image:"..exit_status)
         print("[error]"..exit_status)
     end
 end
@@ -626,8 +650,8 @@ win = disp:AddWindow(
             
                     Weight = 0.05,
                     ui:Label {ID = 'PathLabel', Text = 'Save Path',Alignment = { AlignRight = false },Weight = 0.2},
-                    ui:Button{ ID = 'Browse', Text = 'Browse', Weight = 0.2, },
                     ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
+                    ui:Button{ ID = 'Browse', Text = 'Browse', Weight = 0.2, },
                     
                 },
                 ui:HGroup {
@@ -635,7 +659,12 @@ win = disp:AddWindow(
                     Weight = 0.05,
                     ui:Label {ID = 'ApiKeyLabel', Text = 'API Key',Alignment = { AlignRight = false },Weight = 0.2},
                     ui:LineEdit {ID = 'ApiKey', Text = '',  EchoMode = 'Password',Weight = 0.8},    
-                
+                    ui:Button{ ID = 'Balance', Text = 'Balance', Weight = 0.2, },
+                },
+                ui.HGroup{
+                    Weight = 0.05,
+                    ui:Label{ID = "BalanceLabel",Text = "",Weight = 0.2,Alignment = {AlignHCenter = true, AlignVCenter = true},}
+               
                 },
                 ui:HGroup {
         
@@ -1054,7 +1083,21 @@ end
 function win.On.MyTabs.CurrentChanged(ev)
     itm.MyStack.CurrentIndex = ev.Index
 end
+function win.On.Balance.Clicked(ev)
+    local api_key = itm.ApiKey.Text
+    local credits
+    local status, err = pcall(function()
+        credits = get_remaining_credits(api_key)
+    end)
 
+    if status then
+        itm["BalanceLabel"].Text = "Credits: " .. credits
+        print("Credits: " .. credits)
+    else
+        itm["BalanceLabel"].Text = "Invalid API key"
+        print("发生错误: " .. err)
+    end
+end
 
 function win.On.Browse.Clicked(ev)
     local currentPath = itm.Path.Text
