@@ -220,14 +220,14 @@ win = dispatcher.AddWindow(
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Label({"ID": 'StyleLabel', "Text": 'Style_Preset', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'StyleLabel', "Text": 'Style Preset', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'StyleComboV1', "Text": 'Style_Preset', "Weight": 0.8}),
                                     ]
                                 ),
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Label({"ID": 'CfgScaleLabel', "Text": 'Cfg Scale', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'CfgScaleLabel', "Text": 'CFG Scale', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.LineEdit({"ID": 'CfgScale', "Text": '7', "Weight": 0.8}),
                                     ]
                                 ),
@@ -320,7 +320,7 @@ win = dispatcher.AddWindow(
                                 ui.HGroup(
                                     {"Weight": 0.1},
                                     [
-                                        ui.Label({"ID": 'StyleLabel', "Text": 'Style_Preset', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
+                                        ui.Label({"ID": 'StyleLabel', "Text": 'Style Preset', "Alignment": {"AlignRight": False}, "Weight": 0.2}),
                                         ui.ComboBox({"ID": 'StyleCombo', "Text": 'Style_Preset', "Weight": 0.8}),
                                     ]
                                 ),
