@@ -2,7 +2,8 @@
 
 ## 介绍
 这是一个专门为视频编辑和后期制作软件DaVinci Resolve设计的Lua脚本。借助于最新的SD3.0、SD3-Turbo、SDXL等模型，这个脚本能够调用 [Stability AI](https://stability.ai/) API生成高质量的图片，并将这些图片导入到DaVinci Resolve的媒体池中。特别适用于视频制作人和视觉艺术家，他们需要快速生成并应用大量图像素材，从而提升创作效率并丰富视觉效果。
-![output](https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/0c7dd17a-032e-4681-82a3-352a8a6732c2)
+![Stability](https://github.com/2445868686/Davinci-Resolve-SD-Text-to-Image/assets/50979290/a5e6a601-062a-45d1-9000-27c2f3746161)
+
 <div align="center">
    DaVinci Resolve界面
 </div>
@@ -13,14 +14,14 @@
 
 将`Stability AI 1.0`文件夹移动到以下位置：
 
-  `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Edit`
+  `Mac：/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts/Edit`
   
   `Win：C:\ProgramData\Blackmagic Design\DaVinci Resolve\Fusion\Scripts\Edit`
 
 ###  Fusion Studio 版本安装：
 将`Stability AI 1.0`文件夹移动到以下位置：
 
-  `Mac：/Users/用户名/Library/Application Support/Blackmagic Design/Fusion/Scripts/Comp`
+  `Mac：/Library/Application Support/Blackmagic Design/Fusion/Scripts/Comp`
   
   `Win：C:\ProgramData\Blackmagic Design\Fusion\Scripts\Comp`
 ## 使用
