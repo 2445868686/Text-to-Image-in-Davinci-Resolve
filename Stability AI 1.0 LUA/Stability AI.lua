@@ -650,7 +650,7 @@ win = disp:AddWindow(
             
                     Weight = 0.05,
                     ui:Label {ID = 'PathLabel', Text = 'Save Path',Alignment = { AlignRight = false },Weight = 0.2},
-                    ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
+                    ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.8},
                     ui:Button{ ID = 'Browse', Text = 'Browse', Weight = 0.2, },
                     
                 },
