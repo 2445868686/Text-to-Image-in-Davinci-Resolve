@@ -456,10 +456,9 @@ def on_model_combo_current_index_changed(ev):
     global engine_id
     if itm["ModelCombo"].CurrentIndex == 0:
         engine_id = "stable-diffusion-v1-6"
-        print(f'Using SD 1.6 ,Model: {engine_id}')
     elif itm["ModelCombo"].CurrentIndex == 1:
         engine_id = "stable-diffusion-xl-1024-v1-0"
-        print(f'Using SDXL 1.0 ,Model: {engine_id}')
+    print(f'Using Model: {itm["ModelCombo"].CurrentText}')
 
 win.On.ModelCombo.CurrentIndexChanged = on_model_combo_current_index_changed
 
@@ -472,7 +471,7 @@ def on_sampler_combo_current_index_changed(ev):
 
 win.On.SamplerCombo.CurrentIndexChanged = on_sampler_combo_current_index_changed
 
-models = ['Core', 'SD3', 'SD3 Turbo']
+models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo']
 for model in models:
     itm["ModelComboV2"].AddItem(model)
 
@@ -485,7 +484,7 @@ aspect_ratios = ['1:1', '16:9', '21:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:2
 for ratio in aspect_ratios:
     itm["AspectRatioCombo"].AddItem(ratio)
 
-output_formats = ['png', 'jpeg']
+output_formats = ['png', 'jpeg','webp']
 for format in output_formats:
     itm["OutputFormatCombo"].AddItem(format)
 
@@ -511,25 +510,47 @@ win.On.FUCheckBox.Clicked = on_fu_checkbox_clicked
 model_id = None
 style_preset = ['', '3d-model', 'analog-film', 'anime', 'cinematic', 'comic-book', 'digital-art', 'enhance', 'fantasy-art', 'isometric', 'line-art', 'low-poly', 'modeling-compound', 'neon-punk', 'origami', 'photographic', 'pixel-art', 'tile-texture']
 
+def update_output_formats():
+    if itm["ModelComboV2"].CurrentIndex in [2, 3]:
+        if "webp" in output_formats:
+            output_formats.remove("webp")
+    else:
+        if "webp" not in output_formats:
+            output_formats.append("webp")
+
+    itm["OutputFormatCombo"].Clear()
+    for format in output_formats:
+        itm["OutputFormatCombo"].AddItem(format)
+
 # 处理 ModelComboV2 改变事件
 def on_model_combo_v2_current_index_changed(ev):
-    global model_id
+
     itm["NegativePromptTxt"].ReadOnly = False
-    if itm["ModelComboV2"].CurrentIndex == 0:
+    global model_id
+    model_index = itm["ModelComboV2"].CurrentIndex
+    if model_index == 0:
+        itm["StyleCombo"].Clear()
+        model_id = 'ultra'
+        itm["OutputFormatCombo"].AddItem(format)
+    elif model_index == 1:
         model_id = 'core'
-        print(f'Using Model: {model_id}')
+        itm["StyleCombo"].Clear()
         for style in style_preset:
             itm["StyleCombo"].AddItem(style)
-    elif itm["ModelComboV2"].CurrentIndex == 1:
-        itm["StyleCombo"].Clear()  # 清空 StyleCombo 的所有项
+    elif model_index == 2:
+        itm["StyleCombo"].Clear()
         model_id = 'sd3'
-        print(f'Using Model: {model_id}')
-    elif itm["ModelComboV2"].CurrentIndex == 2:
-        itm["StyleCombo"].Clear()  # 清空 StyleCombo 的所有项
+    elif model_index == 3:
+        itm["StyleCombo"].Clear()
         itm["NegativePromptTxt"].ReadOnly = True
         itm["NegativePromptTxt"].Text = ''
         model_id = 'sd3-turbo'
-        print(f'Using Model: {model_id}')
+
+
+    print(f'Using Model: {itm["ModelComboV2"].CurrentText}')
+
+    update_output_formats()
+        
 
 win.On.ModelComboV2.CurrentIndexChanged = on_model_combo_v2_current_index_changed
 
@@ -541,7 +562,8 @@ win.On.AspectRatioCombo.CurrentIndexChanged = on_aspect_ratio_combo_current_inde
 
 # 处理 OutputFormatCombo 改变事件
 def on_output_format_combo_current_index_changed(ev):
-    print(f'Using Output_Format: {itm["OutputFormatCombo"].CurrentText}')
+    # print(f'Using Output_Format: {itm["OutputFormatCombo"].CurrentText}')
+    pass
 
 win.On.OutputFormatCombo.CurrentIndexChanged = on_output_format_combo_current_index_changed
 
@@ -709,10 +731,9 @@ def generate_image_v2(settings):
 
         if not file_exists:
             break
-
+    #print(output_file)
     url = ""
     data = {
-        "mode": "text-to-image",
         "prompt": settings["PROMPT_V2"],
         "negative_prompt": settings["NEGATIVE_PROMPT"],
         "seed": settings["SEED_V2"],
@@ -720,15 +741,18 @@ def generate_image_v2(settings):
         "output_format": settings["OUTPUT_FORMAT"],
     }
 
-    if settings["MODEL_V2"] == "core":
+    if settings["MODEL_V2"] == "ultra":
+        url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
+
+    elif settings["MODEL_V2"] == "core":
         url = "https://api.stability.ai/v2beta/stable-image/generate/core"
         if settings["STYLE_PRESET"]:
             data["style_preset"] = settings["STYLE_PRESET"]
 
     elif settings["MODEL_V2"] in ["sd3", "sd3-turbo"]:
         url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+        data["mode"] = "text-to-image"
         data["model"] = settings["MODEL_V2"]
-
     else:
         update_status("Invalid model specified.")
         return None
@@ -975,11 +999,6 @@ def on_close(ev):
     dispatcher.ExitLoop()
 # 绑定窗口关闭事件
 win.On.MyWin.Close = on_close
-
-
-
-
-
 
 # 显示窗口
 win.Show()
