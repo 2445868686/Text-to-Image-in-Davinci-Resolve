@@ -481,10 +481,6 @@ def on_model_combo_current_index_changed(ev):
     elif itm["ModelCombo"].CurrentIndex == 1:
         engine_id = "stable-diffusion-xl-1024-v1-0"
     print(f'Using Model: {itm["ModelCombo"].CurrentText}')
-<<<<<<< HEAD
-=======
-
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 win.On.ModelCombo.CurrentIndexChanged = on_model_combo_current_index_changed
 
 samplers = ['DDIM', 'DDPM', 'K_DPMPP_2M', 'K_DPMPP_2S_ANCESTRAL', 'K_DPM_2', 'K_DPM_2_ANCESTRAL', 'K_EULER', 'K_EULER_ANCESTRAL', 'K_HEUN', 'K_LMS']
@@ -495,11 +491,7 @@ def on_sampler_combo_current_index_changed(ev):
     print(f'Using Sampler: {itm["SamplerCombo"].CurrentText}')
 win.On.SamplerCombo.CurrentIndexChanged = on_sampler_combo_current_index_changed
 
-<<<<<<< HEAD
 models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium']
-=======
-models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo']
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 for model in models:
     itm["ModelComboV2"].AddItem(model)
 
@@ -535,18 +527,13 @@ model_id = None
 style_preset = ['', '3d-model', 'analog-film', 'anime', 'cinematic', 'comic-book', 'digital-art', 'enhance', 'fantasy-art', 'isometric', 'line-art', 'low-poly', 'modeling-compound', 'neon-punk', 'origami', 'photographic', 'pixel-art', 'tile-texture']
 
 def update_output_formats():
-<<<<<<< HEAD
     if itm["ModelComboV2"].CurrentIndex in [2, 3 , 4]:
-=======
-    if itm["ModelComboV2"].CurrentIndex in [2, 3]:
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
         if "webp" in output_formats:
             output_formats.remove("webp")
     else:
         if "webp" not in output_formats:
             output_formats.append("webp")
 
-<<<<<<< HEAD
     current_selection = itm["OutputFormatCombo"].CurrentText
     itm["OutputFormatCombo"].Clear()
     for format in output_formats:
@@ -558,13 +545,6 @@ def update_output_formats():
 
 
 
-=======
-    itm["OutputFormatCombo"].Clear()
-    for format in output_formats:
-        itm["OutputFormatCombo"].AddItem(format)
-
-# 处理 ModelComboV2 改变事件
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 def on_model_combo_v2_current_index_changed(ev):
 
     itm["NegativePromptTxt"].ReadOnly = False
@@ -581,29 +561,15 @@ def on_model_combo_v2_current_index_changed(ev):
             itm["StyleCombo"].AddItem(style)
     elif model_index == 2:
         itm["StyleCombo"].Clear()
-<<<<<<< HEAD
         model_id = 'sd3-large'
-=======
-        model_id = 'sd3'
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
     elif model_index == 3:
         itm["StyleCombo"].Clear()
         itm["NegativePromptTxt"].ReadOnly = True
         itm["NegativePromptTxt"].Text = ''
-<<<<<<< HEAD
         model_id = 'sd3-large-turbo'
     elif model_index == 4:
         itm["StyleCombo"].Clear()
         model_id = 'sd3-medium'  
-=======
-        model_id = 'sd3-turbo'
-
-
-    print(f'Using Model: {itm["ModelComboV2"].CurrentText}')
-
-    update_output_formats()
-        
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 
     print(f'Using Model: {itm["ModelComboV2"].CurrentText}')
 
@@ -615,13 +581,6 @@ def on_aspect_ratio_combo_current_index_changed(ev):
     print(f'Using Aspect_Ratio: {itm["AspectRatioCombo"].CurrentText}')
 win.On.AspectRatioCombo.CurrentIndexChanged = on_aspect_ratio_combo_current_index_changed
 
-<<<<<<< HEAD
-=======
-# 处理 OutputFormatCombo 改变事件
-def on_output_format_combo_current_index_changed(ev):
-    # print(f'Using Output_Format: {itm["OutputFormatCombo"].CurrentText}')
-    pass
->>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 
 def on_output_format_combo_current_index_changed(ev):
     # print(f'Using Output_Format: {itm["OutputFormatCombo"].CurrentText}')
