@@ -180,7 +180,11 @@ function Generate_Image_V2(settings)
             base_command = base_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
         end
     
+<<<<<<< HEAD
         if model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
+=======
+        if model == "sd3" or model == "sd3-turbo" then
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
             base_command = base_command ..'-F mode="text-to-image" ' .. string.format('-F model="%s" ', model)
         end
     
@@ -200,7 +204,11 @@ function Generate_Image_V2(settings)
         url = "https://api.stability.ai/v2beta/stable-image/generate/core"
         curl_command = generate_curl_command("core", url, settings, output_file)
     
+<<<<<<< HEAD
     elseif settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
+=======
+    elseif settings.MODEL_V2 == "sd3" or settings.MODEL_V2 == "sd3-turbo" then
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
         url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
         curl_command = generate_curl_command(settings.MODEL_V2, url, settings, output_file)
     
@@ -714,7 +722,11 @@ function win.On.SamplerCombo.CurrentIndexChanged(ev)
     print('Using Sampler:' .. itm.SamplerCombo.CurrentText )
 end
 
+<<<<<<< HEAD
 local MOdel = {'Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
+=======
+local MOdel = {'Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo'}
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
 for _, modeL in ipairs(MOdel) do
     itm.ModelComboV2:AddItem(modeL)
 end
@@ -764,7 +776,11 @@ end
 
 local model_id
 function update_output_formats()
+<<<<<<< HEAD
     if itm.ModelComboV2.CurrentIndex == 2 or itm.ModelComboV2.CurrentIndex == 3 or  itm.ModelComboV2.CurrentIndex == 4 then
+=======
+    if itm.ModelComboV2.CurrentIndex == 2 or itm.ModelComboV2.CurrentIndex == 3 then
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
         for i, format in ipairs(outputFormat) do
             if format == "webp" then
                 table.remove(outputFormat, i)
@@ -812,6 +828,18 @@ end
 function win.On.ModelComboV2.CurrentIndexChanged(ev)
     itm.NegativePromptTxt.ReadOnly = false
     if itm.ModelComboV2.CurrentIndex == 0 then
+<<<<<<< HEAD
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:RemoveItem(0)
+        end
+        model_id = 'ultra'
+    elseif itm.ModelComboV2.CurrentIndex == 1 then
+        model_id = 'core'
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:AddItem(style)
+        end
+    elseif itm.ModelComboV2.CurrentIndex == 2 then
+=======
         for _, style in ipairs(stylePreset) do
             itm.StyleCombo:RemoveItem(0)
         end
@@ -825,6 +853,12 @@ function win.On.ModelComboV2.CurrentIndexChanged(ev)
         for _, style in ipairs(stylePreset) do
             itm.StyleCombo:RemoveItem(0)
         end
+        model_id = 'sd3'
+    elseif itm.ModelComboV2.CurrentIndex == 3 then
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:RemoveItem(0)
+        end
         model_id = 'sd3-large'
     elseif itm.ModelComboV2.CurrentIndex == 3 then
         for _, style in ipairs(stylePreset) do
@@ -832,12 +866,16 @@ function win.On.ModelComboV2.CurrentIndexChanged(ev)
         end
         itm.NegativePromptTxt.ReadOnly = true
         itm.NegativePromptTxt.Text = ''
+<<<<<<< HEAD
         model_id = 'sd3-large-turbo'
     elseif itm.ModelComboV2.CurrentIndex == 4 then
         for _, style in ipairs(stylePreset) do
             itm.StyleCombo:RemoveItem(0)
         end
         model_id = 'sd3-medium'
+=======
+        model_id = 'sd3-turbo'
+>>>>>>> 6e0c0552bb2dd10aefbede4d28fdfbb0d94bf4c1
     end
     print('Using Model:' .. itm.ModelComboV2.CurrentText )
     update_output_formats()
