@@ -1,13 +1,36 @@
-import DaVinciResolveScript as dvr_script
-from python_get_resolve import GetResolve
 import json
 import math
 import os
 import requests
 import sys
 import random
+import platform
+import webbrowser
+try:
+    import DaVinciResolveScript as dvr_script
+    from python_get_resolve import GetResolve
+    print("DaVinciResolveScript from Python")
+except ImportError:
+    
+    if platform.system() == "Darwin": 
+        resolve_script_path1 = "/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Examples"
+        resolve_script_path2 = "/Library/Application Support/Blackmagic Design/DaVinci Resolve/Developer/Scripting/Modules"
+    elif platform.system() == "Windows": 
+        resolve_script_path1 = os.path.join(os.environ['PROGRAMDATA'], "Blackmagic Design", "DaVinci Resolve", "Support", "Developer", "Scripting", "Examples")
+        resolve_script_path2 = os.path.join(os.environ['PROGRAMDATA'], "Blackmagic Design", "DaVinci Resolve", "Support", "Developer", "Scripting", "Modules")
+    else:
+        raise EnvironmentError("Unsupported operating system")
 
+    sys.path.append(resolve_script_path1)
+    sys.path.append(resolve_script_path2)
 
+    try:
+        import DaVinciResolveScript as dvr_script
+        from python_get_resolve import GetResolve
+        print("DaVinciResolveScript from DaVinci")
+    except ImportError as e:
+        raise ImportError("Unable to import DaVinciResolveScript or python_get_resolve after adding paths") from e
+    
 # 获取Resolve实例
 resolve = GetResolve()
 ui = fusion.UIManager
@@ -444,7 +467,6 @@ itm["MyTabs"].AddTab("Image Generate V2")
 itm["MyTabs"].AddTab("Configuration")
 def on_my_tabs_current_changed(ev):
     itm["MyStack"].CurrentIndex = ev["Index"]
-
 win.On.MyTabs.CurrentChanged = on_my_tabs_current_changed
 
 
@@ -459,7 +481,6 @@ def on_model_combo_current_index_changed(ev):
     elif itm["ModelCombo"].CurrentIndex == 1:
         engine_id = "stable-diffusion-xl-1024-v1-0"
     print(f'Using Model: {itm["ModelCombo"].CurrentText}')
-
 win.On.ModelCombo.CurrentIndexChanged = on_model_combo_current_index_changed
 
 samplers = ['DDIM', 'DDPM', 'K_DPMPP_2M', 'K_DPMPP_2S_ANCESTRAL', 'K_DPM_2', 'K_DPM_2_ANCESTRAL', 'K_EULER', 'K_EULER_ANCESTRAL', 'K_HEUN', 'K_LMS']
@@ -468,10 +489,9 @@ for sampler in samplers:
 
 def on_sampler_combo_current_index_changed(ev):
     print(f'Using Sampler: {itm["SamplerCombo"].CurrentText}')
-
 win.On.SamplerCombo.CurrentIndexChanged = on_sampler_combo_current_index_changed
 
-models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo']
+models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium']
 for model in models:
     itm["ModelComboV2"].AddItem(model)
 
@@ -494,35 +514,37 @@ def on_dr_checkbox_clicked(ev):
         print("Using in Fusion Studio")
     else:
         print("Using in DaVinci Resolve")
-
+win.On.DRCheckBox.Clicked = on_dr_checkbox_clicked
 def on_fu_checkbox_clicked(ev):
     itm["DRCheckBox"].Checked = not itm["FUCheckBox"].Checked
     if itm["FUCheckBox"].Checked:
         print("Using in Fusion Studio")
     else:
         print("Using in DaVinci Resolve")
-
-# 绑定事件处理函数
-win.On.DRCheckBox.Clicked = on_dr_checkbox_clicked
 win.On.FUCheckBox.Clicked = on_fu_checkbox_clicked
 
-# 定义所需变量
 model_id = None
 style_preset = ['', '3d-model', 'analog-film', 'anime', 'cinematic', 'comic-book', 'digital-art', 'enhance', 'fantasy-art', 'isometric', 'line-art', 'low-poly', 'modeling-compound', 'neon-punk', 'origami', 'photographic', 'pixel-art', 'tile-texture']
 
 def update_output_formats():
-    if itm["ModelComboV2"].CurrentIndex in [2, 3]:
+    if itm["ModelComboV2"].CurrentIndex in [2, 3 , 4]:
         if "webp" in output_formats:
             output_formats.remove("webp")
     else:
         if "webp" not in output_formats:
             output_formats.append("webp")
 
+    current_selection = itm["OutputFormatCombo"].CurrentText
     itm["OutputFormatCombo"].Clear()
     for format in output_formats:
         itm["OutputFormatCombo"].AddItem(format)
+    
+    # 重新设置当前选项
+    if current_selection in output_formats:
+        itm["OutputFormatCombo"].CurrentText = current_selection
 
-# 处理 ModelComboV2 改变事件
+
+
 def on_model_combo_v2_current_index_changed(ev):
 
     itm["NegativePromptTxt"].ReadOnly = False
@@ -539,38 +561,35 @@ def on_model_combo_v2_current_index_changed(ev):
             itm["StyleCombo"].AddItem(style)
     elif model_index == 2:
         itm["StyleCombo"].Clear()
-        model_id = 'sd3'
+        model_id = 'sd3-large'
     elif model_index == 3:
         itm["StyleCombo"].Clear()
         itm["NegativePromptTxt"].ReadOnly = True
         itm["NegativePromptTxt"].Text = ''
-        model_id = 'sd3-turbo'
-
+        model_id = 'sd3-large-turbo'
+    elif model_index == 4:
+        itm["StyleCombo"].Clear()
+        model_id = 'sd3-medium'  
 
     print(f'Using Model: {itm["ModelComboV2"].CurrentText}')
 
     update_output_formats()
-        
-
 win.On.ModelComboV2.CurrentIndexChanged = on_model_combo_v2_current_index_changed
 
-# 处理 AspectRatioCombo 改变事件
+
 def on_aspect_ratio_combo_current_index_changed(ev):
     print(f'Using Aspect_Ratio: {itm["AspectRatioCombo"].CurrentText}')
-
 win.On.AspectRatioCombo.CurrentIndexChanged = on_aspect_ratio_combo_current_index_changed
 
-# 处理 OutputFormatCombo 改变事件
+
 def on_output_format_combo_current_index_changed(ev):
     # print(f'Using Output_Format: {itm["OutputFormatCombo"].CurrentText}')
     pass
-
 win.On.OutputFormatCombo.CurrentIndexChanged = on_output_format_combo_current_index_changed
 
-# 处理 OpenLinkButton 点击事件
-def on_open_link_button_clicked(ev):
-    bmd.openurl("https://www.paypal.me/heiba2wk")
 
+def on_open_link_button_clicked(ev):
+    webbrowser.open("https://www.paypal.me/heiba2wk")
 win.On.OpenLinkButton.Clicked = on_open_link_button_clicked
 
 
@@ -631,10 +650,8 @@ def show_warning_message(text):
         ]
     )
     
-    # 绑定OK按钮的点击事件
     def on_ok_button_clicked(ev):
         dispatcher.ExitLoop()
-
     msgbox.On.OkButton.Clicked = on_ok_button_clicked
 
     # 显示消息框
@@ -702,11 +719,10 @@ def generate_image_v1(settings, engine_id):
     response = requests.post(url, headers=headers, json=data)
 
     if response.status_code == 200:
-        credits = get_remaining_credits(settings['API_KEY'])
         with open(output_file, 'wb') as file:
             file.write(response.content)
-        update_status(f"Image generated successfully.Credits:{credits}")
-        print(f"Success: Image saved to {output_file},\nCredits:{credits}")
+        update_status("Image generated successfully.")
+        print(f"Success: Image saved to {output_file}")
         return output_file
     else:
         error_message = response.json()
@@ -749,7 +765,7 @@ def generate_image_v2(settings):
         if settings["STYLE_PRESET"]:
             data["style_preset"] = settings["STYLE_PRESET"]
 
-    elif settings["MODEL_V2"] in ["sd3", "sd3-turbo"]:
+    elif settings["MODEL_V2"] in ["sd3-large", "sd3-large-turbo","sd3-medium"]:
         url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
         data["mode"] = "text-to-image"
         data["model"] = settings["MODEL_V2"]
@@ -770,8 +786,8 @@ def generate_image_v2(settings):
         credits = get_remaining_credits(settings['API_KEY'])
         with open(output_file, 'wb') as file:
             file.write(response.content)
-        update_status(f"Image generated successfully.Credits:{credits}")
-        print(f"Success: Image saved to {output_file},\nCredits:{credits}")
+        update_status("Image generated successfully.")
+        print(f"Success: Image saved to {output_file}")
         return output_file
     else:
         error_message = response.json()
@@ -844,7 +860,6 @@ def on_generate_button_clicked(ev):
                 add_to_media_pool(image_path)
             else:
                 load_image_in_fusion(image_path)
-# 绑定事件处理函数
 win.On.GenerateButton.Clicked = on_generate_button_clicked
 
 def close_and_save(settings_file):
@@ -932,7 +947,6 @@ def on_help_button_clicked(ev):
     msgbox.Show()
     dispatcher.RunLoop()
     msgbox.Hide()
-# 绑定 HelpButton 点击事件
 win.On.HelpButton.Clicked = on_help_button_clicked
 
 def on_reset_button_clicked(ev):
@@ -967,7 +981,6 @@ def on_reset_button_clicked(ev):
         itm["RandomSeed"].Checked = default_settings["USE_RANDOM_SEED_V1"]
 
     update_status(" ")
-# 绑定 ResetButton 点击事件
 win.On.ResetButton.Clicked = on_reset_button_clicked
 
 
@@ -978,7 +991,6 @@ def on_browse_button_clicked(ev):
         itm["Path"].Text = str(selected_path)
     else:
         print("No directory selected or the request failed.")
-# 绑定 Browse 按钮点击事件
 win.On.Browse.Clicked = on_browse_button_clicked
 
 
@@ -990,14 +1002,11 @@ def on_balance_button_clicked(ev):
     except Exception as e:
         itm["BalanceLabel"].Text = f"Invalid API key"
         print(f"发生错误: {e}")
-
-# 绑定 Balance 按钮点击事件
 win.On.Balance.Clicked = on_balance_button_clicked
 
 def on_close(ev):
     close_and_save(settings_file)
     dispatcher.ExitLoop()
-# 绑定窗口关闭事件
 win.On.MyWin.Close = on_close
 
 # 显示窗口

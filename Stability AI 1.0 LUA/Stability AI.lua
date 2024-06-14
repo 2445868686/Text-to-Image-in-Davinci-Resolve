@@ -154,16 +154,14 @@ function Generate_Image_V2(settings)
         if file then file:close() end
     until not file_exists
 
-    local url
-    local curl_command
-
-    if settings.MODEL_V2 == "core" then
-        url = "https://api.stability.ai/v2beta/stable-image/generate/core"
-        curl_command = string.format(
+    local function generate_curl_command(model, url, settings, output_file)
+        local escaped_prompt = settings.PROMPT_V2:gsub('"', '\\"'):gsub("'", '\\"')
+        local escaped_negative_prompt = settings.NEGATIVE_PROMPT:gsub('"', '\\"'):gsub("'", '\\"')
+        
+        local base_command = string.format(
             'curl -f -sS -X POST "%s" ' ..
             '-H "Authorization: Bearer %s" ' ..
             '-H "Accept: image/*" ' ..
-            '-F mode="text-to-image" ' ..
             '-F prompt="%s" ' ..
             '-F negative_prompt="%s" ' ..
             '-F seed=%d ' ..
@@ -171,43 +169,41 @@ function Generate_Image_V2(settings)
             '-F output_format="%s" ',
             url,
             settings.API_KEY,
-            settings.PROMPT_V2:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
-            settings.NEGATIVE_PROMPT:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
+            escaped_prompt,
+            escaped_negative_prompt,
             settings.SEED,
             settings.ASPECT_RATIO,
             settings.OUTPUT_FORMAT
         )
-        if settings.STYLE_PRESET ~= '' then
-            curl_command = curl_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
+    
+        if model == "core" and settings.STYLE_PRESET ~= '' then
+            base_command = base_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
         end
-        
-        curl_command = curl_command .. string.format('-o "%s"', output_file)
-
-    elseif settings.MODEL_V2 == "sd3" or settings.MODEL_V2 == "sd3-turbo" then
+    
+        if model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
+            base_command = base_command ..'-F mode="text-to-image" ' .. string.format('-F model="%s" ', model)
+        end
+    
+        base_command = base_command .. string.format('-o "%s"', output_file)
+    
+        return base_command
+    end
+    
+    local url
+    local curl_command
+    
+    if settings.MODEL_V2 == "ultra" then
+        url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
+        curl_command = generate_curl_command("ultra", url, settings, output_file)
+    
+    elseif settings.MODEL_V2 == "core" then
+        url = "https://api.stability.ai/v2beta/stable-image/generate/core"
+        curl_command = generate_curl_command("core", url, settings, output_file)
+    
+    elseif settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
         url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
-        curl_command = string.format(
-            'curl -f -sS -X POST "%s" ' ..
-            '-H "Authorization: Bearer %s" ' ..
-            '-H "Accept: image/*" ' ..
-            '-F mode="text-to-image" ' ..
-            '-F prompt="%s" ' ..
-            '-F negative_prompt="%s" ' ..
-            '-F seed=%d ' ..
-            '-F aspect_ratio="%s" ' ..
-            '-F output_format="%s" ' ..
-            '-F model="%s" ' ..
-            '-o "%s"',
-            url,
-            settings.API_KEY,
-            settings.PROMPT_V2:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the prompt
-            settings.NEGATIVE_PROMPT:gsub('"', '\\"'):gsub("'", '\\"'),  -- Escape double quotes in the negative prompt
-            settings.SEED,
-            settings.ASPECT_RATIO,
-            settings.OUTPUT_FORMAT,
-            settings.MODEL_V2,
-            output_file
-        )
-
+        curl_command = generate_curl_command(settings.MODEL_V2, url, settings, output_file)
+    
     else
         updateStatus("Invalid model specified.")
         return nil
@@ -218,12 +214,11 @@ function Generate_Image_V2(settings)
 
     local success, _, exit_status = os.execute(curl_command)
     if success and exit_status == 0 then
-        local credits = get_remaining_credits(settings.API_KEY)
-        updateStatus("Image generated successfully.Credits:"..credits)
-        print("["..exit_status.."]".."Success".."\noutput_file:"..output_file.."\nCredits:"..credits)
+        updateStatus("Image generated successfully.")
+        print("["..exit_status.."]".."Success".."\noutput_file:"..output_file)
         return output_file
     else
-        updateStatus("Failed to generate image"..exit_status)
+        updateStatus("Failed to generate image["..exit_status.."]")
         print("[error]"..exit_status)
     end
 end
@@ -257,7 +252,7 @@ function Generate_Image_V1(settings,engine_id)
     until not file_exists
     local data = {
         text_prompts = {{
-            text = settings.PROMPT_V1:gsub('"', '\\"'):gsub("'", '\\"')
+            text = settings.PROMPT_V1:gsub('"', "\'"):gsub("'", "\'")
         }},
         cfg_scale = settings.CFG_SCALE,
         height = settings.HEIGHT,
@@ -304,9 +299,9 @@ function Generate_Image_V1(settings,engine_id)
     local success, _, exit_status = os.execute(curl_command)
 
     if success and exit_status == 0 then
-        local credits = get_remaining_credits(settings.API_KEY)
-        updateStatus("Image generated successfully.Credits:"..credits)
-        print("["..exit_status.."]".."Image generated successfully.".."\noutput_file:"..output_file.."\nCredits:"..credits)
+    
+        updateStatus("Image generated successfully.")
+        print("["..exit_status.."]".."Image generated successfully.".."\noutput_file:"..output_file)
         return output_file
     else
         updateStatus("Failed to generate image:"..exit_status)
@@ -650,7 +645,7 @@ win = disp:AddWindow(
             
                     Weight = 0.05,
                     ui:Label {ID = 'PathLabel', Text = 'Save Path',Alignment = { AlignRight = false },Weight = 0.2},
-                    ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.8},
+                    ui:LineEdit {ID = 'Path', Text = '', PlaceholderText = '',ReadOnly = false ,Weight = 0.6},
                     ui:Button{ ID = 'Browse', Text = 'Browse', Weight = 0.2, },
                     
                 },
@@ -719,7 +714,7 @@ function win.On.SamplerCombo.CurrentIndexChanged(ev)
     print('Using Sampler:' .. itm.SamplerCombo.CurrentText )
 end
 
-local MOdel = {'Core','SD3','SD3 Turbo'}
+local MOdel = {'Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
 for _, modeL in ipairs(MOdel) do
     itm.ModelComboV2:AddItem(modeL)
 end
@@ -736,7 +731,7 @@ for _, ratio in ipairs(aspectRatios) do
     itm.AspectRatioCombo:AddItem(ratio)
 end
 
-local outputFormat = {'png','jpeg',}
+local outputFormat = {'png', 'jpeg','webp'}
 for _, format in ipairs(outputFormat) do
     itm.OutputFormatCombo:AddItem(format)
 end
@@ -762,30 +757,90 @@ function win.On.FUCheckBox.Clicked(ev)
     end
 end
 
+function update_output_formats()
+
+end
+
+
 local model_id
+function update_output_formats()
+    if itm.ModelComboV2.CurrentIndex == 2 or itm.ModelComboV2.CurrentIndex == 3 or  itm.ModelComboV2.CurrentIndex == 4 then
+        for i, format in ipairs(outputFormat) do
+            if format == "webp" then
+                table.remove(outputFormat, i)
+                break
+            end
+        end
+    else
+        local webp_exists = false
+        for _, format in ipairs(outputFormat) do
+            if format == "webp" then
+                webp_exists = true
+                break
+            end
+        end
+        if not webp_exists then
+            table.insert(outputFormat, "webp")
+        end
+    end
+
+    -- 获取当前选择的格式
+    local current_selection = itm.OutputFormatCombo.CurrentText
+    -- 清空现有的项目
+    local count = itm.OutputFormatCombo:Count()
+    for i = count - 1, 0, -1 do
+        itm.OutputFormatCombo:RemoveItem(i)
+    end
+
+    -- 重新添加格式
+    for _, format in ipairs(outputFormat) do
+        itm.OutputFormatCombo:AddItem(format)
+    end
+
+    -- 重新设置当前选项
+    for _, format in ipairs(outputFormat) do
+        if format == current_selection then
+            itm.OutputFormatCombo.CurrentIndex = _-1
+            break
+        else
+            itm.OutputFormatCombo.CurrentIndex = 0
+        end
+    end
+
+end
+
 function win.On.ModelComboV2.CurrentIndexChanged(ev)
     itm.NegativePromptTxt.ReadOnly = false
     if itm.ModelComboV2.CurrentIndex == 0 then
-        model_id = 'core'
-        print('Using Model:' .. model_id)
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:AddItem(style)
-        end
-    elseif itm.ModelComboV2.CurrentIndex == 1 then
         for _, style in ipairs(stylePreset) do
             itm.StyleCombo:RemoveItem(0)
         end
-        model_id = 'sd3'
-        print('Using Model:' .. model_id)
+        model_id = 'ultra'
+    elseif itm.ModelComboV2.CurrentIndex == 1 then
+        model_id = 'core'
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:AddItem(style)
+        end
     elseif itm.ModelComboV2.CurrentIndex == 2 then
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:RemoveItem(0)
+        end
+        model_id = 'sd3-large'
+    elseif itm.ModelComboV2.CurrentIndex == 3 then
         for _, style in ipairs(stylePreset) do
             itm.StyleCombo:RemoveItem(0)
         end
         itm.NegativePromptTxt.ReadOnly = true
         itm.NegativePromptTxt.Text = ''
-        model_id = 'sd3-turbo'
-        print('Using Model:' .. model_id )
+        model_id = 'sd3-large-turbo'
+    elseif itm.ModelComboV2.CurrentIndex == 4 then
+        for _, style in ipairs(stylePreset) do
+            itm.StyleCombo:RemoveItem(0)
+        end
+        model_id = 'sd3-medium'
     end
+    print('Using Model:' .. itm.ModelComboV2.CurrentText )
+    update_output_formats()
 end
 
 function win.On.AspectRatioCombo.CurrentIndexChanged(ev)
@@ -793,7 +848,7 @@ function win.On.AspectRatioCombo.CurrentIndexChanged(ev)
 end
 
 function win.On.OutputFormatCombo.CurrentIndexChanged(ev)
-    print('Using Output_Format:' .. itm.OutputFormatCombo.CurrentText )
+    -- print('Using Output_Format:' .. itm.OutputFormatCombo.CurrentText )
 end
 
 function win.On.OpenLinkButton.Clicked(ev)
