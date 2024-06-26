@@ -484,7 +484,7 @@ win = disp:AddWindow(
                 ui:HGroup {
         
                     Weight = 0.1,
-                    ui:Label {ID = 'StepsLabel', Text = 'Steps',Alignment = { AlignRight = false },Weight = 0.2},
+                    ui:Label {ID = 'StepsLabel', Text = '步数',Alignment = { AlignRight = false },Weight = 0.2},
                     ui:LineEdit {ID = 'Steps', Text = '30',Weight = 0.8},
         
                 },
@@ -511,7 +511,7 @@ win = disp:AddWindow(
         
                     Weight = 0.1,
                     ui:Button {ID = 'GenerateButton', Text = '生成'},
-                    ui:Button {ID = 'ResetButton', Text = '复位'},
+                    ui:Button {ID = 'ResetButton', Text = '重置'},
         
                 },
         
@@ -607,7 +607,7 @@ win = disp:AddWindow(
         
                     Weight = 0.1,
                     ui:Button {ID = 'GenerateButton', Text = '生成'},
-                    ui:Button {ID = 'ResetButton', Text = '复位'},
+                    ui:Button {ID = 'ResetButton', Text = '重置'},
         
                 },
         
@@ -721,9 +721,45 @@ end
 
 
 local stylePreset ={'Default','3d-model','analog-film','anime','cinematic','comic-book','digital-art','enhance','fantasy-art','isometric','line-art','low-poly','modeling-compound','neon-punk','origami','photographic','pixel-art','tile-texture',}
+-- 定义 stylePreset 的汉化映射
+local stylePreset_CN = {
+    ['Default'] = '默认',
+    ['3d-model'] = '3D模型',
+    ['analog-film'] = '胶片',
+    ['anime'] = '动漫',
+    ['cinematic'] = '电影',
+    ['comic-book'] = '漫画',
+    ['digital-art'] = '数字艺术',
+    ['enhance'] = '增强',
+    ['fantasy-art'] = '奇幻艺术',
+    ['isometric'] = '等距',
+    ['line-art'] = '线条艺术',
+    ['low-poly'] = '低多边形',
+    ['modeling-compound'] = '模型复合',
+    ['neon-punk'] = '霓虹朋克',
+    ['origami'] = '折纸',
+    ['photographic'] = '摄影',
+    ['pixel-art'] = '像素艺术',
+    ['tile-texture'] = '瓷砖纹理',
+}
+-- 定义从中文名称获取英文名称的反向映射
+local stylePreset_CN_to_EN = {}
+for en, cn in pairs(stylePreset_CN) do
+    stylePreset_CN_to_EN[cn] = en
+end
+
+-- 获取中文样式预设对应的英文名称的函数
+local function getStylePresetEN(chineseStyle)
+    return stylePreset_CN_to_EN[chineseStyle] or chineseStyle
+end
+
+local function getStylePresetCN(style)
+    return stylePreset_CN[style] or style
+end
+
 for _, style in ipairs(stylePreset) do
-    itm.StyleCombo:AddItem(style)
-    itm.StyleComboV1:AddItem(style)
+    itm.StyleCombo:AddItem(getStylePresetCN(style))
+    itm.StyleComboV1:AddItem(getStylePresetCN(style))
 end
 
 local aspectRatios = {'1:1', '16:9', '21:9', '2:3', '3:2', '4:5', '5:4', '9:16', '9:21'}
@@ -927,7 +963,7 @@ function win.On.GenerateButton.Clicked(ev)
             API_KEY = itm.ApiKey.Text,
             PROMPT_V2 = itm.PromptTxtV2.PlainText,
             NEGATIVE_PROMPT = itm.NegativePromptTxt.PlainText,
-            STYLE_PRESET = itm.StyleCombo.CurrentText,
+            STYLE_PRESET = getStylePresetEN(itm.StyleCombo.CurrentText),
             ASPECT_RATIO = itm.AspectRatioCombo.CurrentText,
             OUTPUT_FORMAT = itm.OutputFormatCombo.CurrentText,
             MODEL_V2 = model_id ,
@@ -961,7 +997,7 @@ function win.On.GenerateButton.Clicked(ev)
             CFG_SCALE = tonumber(itm.CfgScale.Text),
             HEIGHT = tonumber(itm.Height.Text),
             WIDTH = tonumber(itm.Width.Text),
-            STYLE_PRESET_V1 = itm.StyleComboV1.CurrentText,
+            STYLE_PRESET_V1 = getStylePresetEN(itm.StyleComboV1.CurrentText),
             SAMPLES = tonumber(itm.Samples.Text),
             STEPS = tonumber(itm.Steps.Text),
             SEED = newseed,
@@ -1137,8 +1173,8 @@ function win.On.Balance.Clicked(ev)
     end)
 
     if status then
-        itm["BalanceLabel"].Text = "Credits: " .. credits
-        print("Credits: " .. credits)
+        itm["BalanceLabel"].Text = "剩余积分: " .. credits
+        print("剩余积分: " .. credits)
     else
         itm["BalanceLabel"].Text = "Invalid API key"
         print("发生错误: " .. err)
