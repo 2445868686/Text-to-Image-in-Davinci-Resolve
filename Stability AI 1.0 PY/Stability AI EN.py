@@ -495,7 +495,7 @@ models = ['Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 
 for model in models:
     itm["ModelComboV2"].AddItem(model)
 
-style_presets = ['', '3d-model', 'analog-film', 'anime', 'cinematic', 'comic-book', 'digital-art', 'enhance', 'fantasy-art', 'isometric', 'line-art', 'low-poly', 'modeling-compound', 'neon-punk', 'origami', 'photographic', 'pixel-art', 'tile-texture']
+style_presets = ['Default', '3d-model', 'analog-film', 'anime', 'cinematic', 'comic-book', 'digital-art', 'enhance', 'fantasy-art', 'isometric', 'line-art', 'low-poly', 'modeling-compound', 'neon-punk', 'origami', 'photographic', 'pixel-art', 'tile-texture']
 for style in style_presets:
     itm["StyleCombo"].AddItem(style)
     itm["StyleComboV1"].AddItem(style)
@@ -548,27 +548,26 @@ def update_output_formats():
 def on_model_combo_v2_current_index_changed(ev):
 
     itm["NegativePromptTxt"].ReadOnly = False
+    itm["StyleCombo"].CurrentIndex = 0
     global model_id
     model_index = itm["ModelComboV2"].CurrentIndex
     if model_index == 0:
-        itm["StyleCombo"].Clear()
+        itm["StyleCombo"].Enabled = False
         model_id = 'ultra'
         itm["OutputFormatCombo"].AddItem(format)
     elif model_index == 1:
         model_id = 'core'
-        itm["StyleCombo"].Clear()
-        for style in style_preset:
-            itm["StyleCombo"].AddItem(style)
+        itm["StyleCombo"].Enabled = True
     elif model_index == 2:
-        itm["StyleCombo"].Clear()
+        itm["StyleCombo"].Enabled = False
         model_id = 'sd3-large'
     elif model_index == 3:
-        itm["StyleCombo"].Clear()
+        itm["StyleCombo"].Enabled = False
         itm["NegativePromptTxt"].ReadOnly = True
         itm["NegativePromptTxt"].Text = ''
         model_id = 'sd3-large-turbo'
     elif model_index == 4:
-        itm["StyleCombo"].Clear()
+        itm["StyleCombo"].Enabled = False
         model_id = 'sd3-medium'  
 
     print(f'Using Model: {itm["ModelComboV2"].CurrentText}')
@@ -704,7 +703,7 @@ def generate_image_v1(settings, engine_id):
         "seed": settings["SEED_V1"],
         "sampler": settings["SAMPLER"]
     }
-    if settings.get("STYLE_PRESET_V1"):
+    if settings.get("STYLE_PRESET_V1")!="Default":
         data["style_preset"] = settings["STYLE_PRESET_V1"]
 
     headers = {
@@ -762,7 +761,7 @@ def generate_image_v2(settings):
 
     elif settings["MODEL_V2"] == "core":
         url = "https://api.stability.ai/v2beta/stable-image/generate/core"
-        if settings["STYLE_PRESET"]:
+        if settings["STYLE_PRESET"]!="Default":
             data["style_preset"] = settings["STYLE_PRESET"]
 
     elif settings["MODEL_V2"] in ["sd3-large", "sd3-large-turbo","sd3-medium"]:
