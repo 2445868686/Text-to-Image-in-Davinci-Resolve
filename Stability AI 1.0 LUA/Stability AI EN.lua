@@ -176,7 +176,7 @@ function Generate_Image_V2(settings)
             settings.OUTPUT_FORMAT
         )
     
-        if model == "core" and settings.STYLE_PRESET ~= '' then
+        if model == "core" and settings.STYLE_PRESET ~= 'Default' then
             base_command = base_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
         end
     
@@ -262,7 +262,7 @@ function Generate_Image_V1(settings,engine_id)
         seed = settings.SEED,
         sampler = settings.SAMPLER
     }
-    if settings.STYLE_PRESET_V1 ~= '' then
+    if settings.STYLE_PRESET_V1 ~= 'Default' then
         data.style_preset = settings.STYLE_PRESET_V1
     end
 
@@ -720,7 +720,7 @@ for _, modeL in ipairs(MOdel) do
 end
 
 
-local stylePreset ={'','3d-model','analog-film','anime','cinematic','comic-book','digital-art','enhance','fantasy-art','isometric','line-art','low-poly','modeling-compound','neon-punk','origami','photographic','pixel-art','tile-texture',}
+local stylePreset ={'Default','3d-model','analog-film','anime','cinematic','comic-book','digital-art','enhance','fantasy-art','isometric','line-art','low-poly','modeling-compound','neon-punk','origami','photographic','pixel-art','tile-texture',}
 for _, style in ipairs(stylePreset) do
     itm.StyleCombo:AddItem(style)
     itm.StyleComboV1:AddItem(style)
@@ -811,32 +811,23 @@ end
 
 function win.On.ModelComboV2.CurrentIndexChanged(ev)
     itm.NegativePromptTxt.ReadOnly = false
+    itm.StyleCombo.CurrentIndex = 0
     if itm.ModelComboV2.CurrentIndex == 0 then
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:RemoveItem(0)
-        end
+        itm.StyleCombo.Enabled = false
         model_id = 'ultra'
     elseif itm.ModelComboV2.CurrentIndex == 1 then
         model_id = 'core'
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:AddItem(style)
-        end
+        itm.StyleCombo.Enabled = true
     elseif itm.ModelComboV2.CurrentIndex == 2 then
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:RemoveItem(0)
-        end
+        itm.StyleCombo.Enabled = false
         model_id = 'sd3-large'
     elseif itm.ModelComboV2.CurrentIndex == 3 then
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:RemoveItem(0)
-        end
         itm.NegativePromptTxt.ReadOnly = true
+        itm.StyleCombo.Enabled = false
         itm.NegativePromptTxt.Text = ''
         model_id = 'sd3-large-turbo'
     elseif itm.ModelComboV2.CurrentIndex == 4 then
-        for _, style in ipairs(stylePreset) do
-            itm.StyleCombo:RemoveItem(0)
-        end
+        itm.StyleCombo.Enabled = false
         model_id = 'sd3-medium'
     end
     print('Using Model:' .. itm.ModelComboV2.CurrentText )
