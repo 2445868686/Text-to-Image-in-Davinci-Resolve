@@ -617,7 +617,7 @@ win.On.OutputFormatCombo.CurrentIndexChanged = on_output_format_combo_current_in
 
 
 def on_open_link_button_clicked(ev):
-    webbrowser.open("https://www.paypal.me/heiba2wk")
+    webbrowser.open("https://mp.weixin.qq.com/s?__biz=MzUzMTk2MDU5Nw==&mid=2247484510&idx=1&sn=90eee18a870c7f5d4c418bab5e3acb37&chksm=fabbc224cdcc4b32e554f2699431a2781ac2db4cae00e02ef8556451531a3baf3bde32dc3113#rd")
 win.On.OpenLinkButton.Clicked = on_open_link_button_clicked
 
 
