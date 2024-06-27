@@ -879,7 +879,7 @@ function win.On.OutputFormatCombo.CurrentIndexChanged(ev)
 end
 
 function win.On.OpenLinkButton.Clicked(ev)
-    bmd.openurl("https://www.paypal.me/heiba2wk")
+    bmd.openurl("https://mp.weixin.qq.com/s?__biz=MzUzMTk2MDU5Nw==&mid=2247484510&idx=1&sn=90eee18a870c7f5d4c418bab5e3acb37&chksm=fabbc224cdcc4b32e554f2699431a2781ac2db4cae00e02ef8556451531a3baf3bde32dc3113#rd")
 end
 
 function updateStatus(message)
