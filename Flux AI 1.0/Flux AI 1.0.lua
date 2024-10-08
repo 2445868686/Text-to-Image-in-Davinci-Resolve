@@ -1,4 +1,4 @@
-local infomsg =[[
+local infomsg_en =[[
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,14 +35,63 @@ local infomsg =[[
     </style>
 </head>
 <body>
-    <h3>FLUX1.1 [pro]</h3>
+    <h3>FLUX 1.1 [pro]</h3>
     <p>Top-of-the-line image generation with blazing speed and quality.</p>
 
-    <h3>FLUX.1 [pro]</h3>
+    <h3>FLUX 1 [pro]</h3>
     <p>High-speed image generation with excellent quality and diversity. </p>
 
-    <h3>FLUX.1 [dev]</h3>
+    <h3>FLUX 1 [dev]</h3>
     <p>An open-weight model for non-commercial use, distilled from FLUX.1 [pro] for efficiency.</p>
+</body>
+</html>
+]]
+
+local infomsg_cn = [[
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #ffffff;
+            padding: 20px;
+        }
+        h3 {
+            font-weight: bold;
+            font-size: 1.5em;
+            margin-top: 15px;
+            margin-bottom: 0px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 5px;
+            color: #c7a364; /* 黄色 */
+        }
+        p {
+            font-size: 1.2em;
+            margin-top: 5px;
+            margin-bottom: 0px;
+            color: #a3a3a3; /* 浅灰色 */
+        }
+        a {
+            color: #1e90ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h3>FLUX1.1 [pro]</h3>
+    <p>顶级图像生成，速度与质量俱佳。</p>
+
+    <h3>FLUX.1 [pro]</h3>
+    <p>高速图像生成，质量和多样性表现卓越。</p>
+
+    <h3>FLUX.1 [dev]</h3>
+    <p>一个用于非商业用途的开源模型，由 FLUX.1 [pro] 精简优化而来，注重效率。</p>
 </body>
 </html>
 ]]
@@ -178,6 +227,7 @@ local default_settings = {
     INTERVAL = 2.0,
     MODEL = 0,
     OUTPUT_DIRECTORY = "",
+    STATUS = "",
     USE_RANDOM_SEED = true
 }
 
@@ -216,7 +266,7 @@ local function http_post(url, headers, body)
         )
     else  -- Unix-like systems
         command = string.format(
-            'curl -s -X POST -H "Content-Type: %s" -H "X-Key: %s" -H "Accept: application/json" --data-raw '%s' %s',
+            "curl -s -X POST -H \"Content-Type: %s\" -H \"X-Key: %s\" -H \"Accept: application/json\" --data-raw '%s' %s",
             headers["Content-Type"], headers["X-Key"], body, url
         )
     end
@@ -259,7 +309,7 @@ local function generate_image(settings)
 
     -- Prepare the payload with all required parameters
     local payload = {
-        prompt = settings.PROMPT,
+        prompt = settings.PROMPT:gsub('[\r\n]', ' '),
         width = settings.WIDTH,
         height = settings.HEIGHT,
         prompt_upsampling = settings.PROMPT_UPSAMPLING,
@@ -305,7 +355,9 @@ local function generate_image(settings)
     if id then
         return id  -- Return the ID to be used for polling the result
     else
+        update_Status("Failed to generate image: " .. response)
         error("Failed to generate image: " .. response)
+        
     end
 end
 
@@ -338,19 +390,25 @@ local function get_image_result(id)
                 os.execute("sleep " .. wait_time)
             end            
         elseif status == "Task not found" then
+            update_Status("Task not found: The given task ID is invalid or expired.")
             error("Task not found: The given task ID is invalid or expired.")
         elseif status == "Request Moderated" then
+            update_Status("Request Moderated: The request was moderated and cannot be processed.")
             error("Request Moderated: The request was moderated and cannot be processed.")
         elseif status == "Content Moderated" then
+            update_Status("Content Moderated: The generated content was moderated and cannot be processed.")
             error("Content Moderated: The generated content was moderated and cannot be processed.")
         elseif status == "Error" then
+            update_Status("Error: There was an error while processing the request.")
             error("Error: There was an error while processing the request.")
         else
+            update_Status("Unexpected response status: " .. (status or "unknown") .. ". Full response: " .. response)
             error("Unexpected response status: " .. (status or "unknown") .. ". Full response: " .. response)
         end
     end
 
     -- 如果达到最大重试次数后仍未成功
+    update_Status("Failed to get image result after multiple attempts. Status remains 'Pending'.")
     error("Failed to get image result after multiple attempts. Status remains 'Pending'.")
 end
 
@@ -366,26 +424,65 @@ local function download_image(image_url, output_path)
     local directory = output_path:match("^(.*)[/\\]")
     if directory then
         if package.config:sub(1, 1) == '\\' then  -- Windows
-            os.execute(string.format("mkdir \"%s\" 2>nul || exit 0", directory))
+            os.execute(string.format('mkdir "%s" 2>nul || exit 0', directory))
         else  -- Unix-like systems
-            os.execute(string.format("mkdir -p \"%s\"", directory))
+            os.execute(string.format('mkdir -p "%s"', directory))
         end
     end
 
-    local command = string.format("curl -s -o \"%s\" %s", output_path, image_url)
-    update_Status("Downloading the image")
-    print(command)
-    local result = os.execute(command)
-    print("Image saved as " .. output_path)
+    -- Set download timeout in seconds
+    local timeout = 30  -- You can adjust this value as needed
 
-    -- Check if the download was successful
-    local file = io.open(output_path, "r")
-    if file then
-        file:close()
-        return true
-    else
-        return false
+    -- Set maximum number of retries
+    local max_retries = 3
+    local attempt = 0
+    local success = false
+
+    while attempt < max_retries and not success do
+        attempt = attempt + 1
+        print(string.format("Download attempt %d of %d", attempt, max_retries))
+
+        -- Construct the curl command with timeout and error log recording
+        local command = string.format(
+            'curl -s --max-time %d -o "%s" "%s" 2> "curl_error.log"',
+            timeout, output_path, image_url
+        )
+
+        update_Status("Downloading the image...")
+        print("Executing command: " .. command)
+
+        -- Execute the curl command
+        local result = os.execute(command)
+
+        -- Check if the file was downloaded successfully
+        local file = io.open(output_path, "r")
+        if file then
+            file:close()
+            print("Image saved as " .. output_path)
+            update_Status("Image downloaded successfully.")
+            success = true
+            return true
+        else
+            print("Image download failed on attempt " .. attempt)
+            if attempt < max_retries then
+                print("Retrying download...")
+            end
+        end
     end
+
+    -- All attempts failed, read the error log for details
+    local error_message = "Failed to download the image: The download timed out or an error occurred."
+    local error_file = io.open("curl_error.log", "r")
+    if error_file then
+        local error_content = error_file:read("*a")
+        error_file:close()
+        error_message = error_message .. "\nError Details: " .. error_content
+    end
+
+    print(error_message)
+    update_Status("Image download failed.")
+    showWarningMessage(error_message)
+    return false
 end
 
 
@@ -437,7 +534,14 @@ win = disp:AddWindow(
                     ui:TextEdit{ID='PromptTxt', Text = '', PlaceholderText = 'Please Enter a Prompt.',Weight = 0.5},
         
                 },
+                ui:HGroup {
+        
+                    Weight = 0.1,
+                    ui:CheckBox {ID = 'RandomSeed',Text = 'Use Random Seed',Checked = true, Weight = 0.5},
+                    ui:CheckBox {ID = 'PromptUpsampling',Text = 'Prompt Upsampling',Checked = true, Weight = 0.5},
+        
                 
+                },
                 ui:HGroup {
         
                     Weight = 0.1,
@@ -477,20 +581,13 @@ win = disp:AddWindow(
                     
         
                 },
-                ui:HGroup {
-        
-                    Weight = 0.1,
-                    ui:CheckBox {ID = 'RandomSeed',Text = 'Use Random Seed',Checked = true, Weight = 0.5},
-                    ui:CheckBox {ID = 'PromptUpsampling',Text = 'Prompt Upsampling',Checked = true, Weight = 0.5},
-        
-                
-                },
+
                 ui:HGroup {
         
                     Weight = 0.1,
                     ui:Button {ID = 'GenerateButton', Text = 'Generate'},
                     ui:Button {ID = 'ResetButton', Text = 'Reset'},
-                    ui:Button {ID = 'HelpButton', Text = 'Help'},
+                    --ui:Button {ID = 'HelpButton', Text = 'Help'},
                 },
         
                 ui:HGroup {
@@ -544,7 +641,7 @@ win = disp:AddWindow(
                 },
                 ui:HGroup {
         
-                    ui:TextEdit{ID='infoTxt', Text = infomsg ,ReadOnly = true,},
+                    ui:TextEdit{ID='infoTxt', Text = infomsg_cn ,ReadOnly = true,},
                     Weight = 0.85,
                 },
                 ui:Button {
@@ -569,10 +666,30 @@ win = disp:AddWindow(
  
 itm = win:GetItems()
 itm.MyStack.CurrentIndex = 0
-itm.MyTabs:AddTab("Generate")
-itm.MyTabs:AddTab("Configuration")
+--itm.MyTabs:AddTab("Generate")
+--itm.MyTabs:AddTab("Configuration")
 
-local ModeL = {'FLUX 1.1 [pro]','FLUX.1 [pro]', 'FLUX.1 [dev]'}
+itm.MyTabs:AddTab("文生图")
+itm.MyTabs:AddTab("配置")
+itm.ModelLabel.Text = "模型"
+itm.WidthLabel.Text = "宽度"
+itm.HeightLabel.Text = "高度"
+itm.SafetyToleranceLabel.Text = "安全度"
+itm.SeedLabel.Text = "种子"
+itm.StepsLabel.Text = "步数"
+itm.GuidanceLabel.Text = "指导度"
+itm.IntervalLabel.Text = "间隔"
+itm.RandomSeed.Text = "使用随机种子"
+itm.PromptUpsampling.Text = "提示超采样"
+itm.GenerateButton.Text = "生成"
+itm.ResetButton.Text = "重置"
+--itm.HelpButton.Text = "帮助"
+itm.DRCheckBox.Text = "在DaVinci Resolve中使用"
+itm.FUCheckBox.Text = "在Fusion Studio中使用"
+itm.PathLabel.Text = "保存路径"
+itm.Browse.Text = "打开"
+itm.RegisterButton.Text = "注册"
+local ModeL = {'FLUX 1.1 [pro]','FLUX 1 [pro]', 'FLUX 1 [dev]'}
 for _, modeL in ipairs(ModeL) do
     itm.ModelCombo:AddItem(modeL)
 end
@@ -652,6 +769,7 @@ function win.On.FUCheckBox.Clicked(ev)
     end
 end
 function win.On.GenerateButton.Clicked(ev)
+    update_Status("Generating....")
     if itm.Path.Text == '' then
         showWarningMessage('Please go to Configuration to select the image save path.')
         return
@@ -724,6 +842,7 @@ function win.On.GenerateButton.Clicked(ev)
         print("Failed to generate image.")
         update_Status("Failed to generate image.")
     end
+    update_Status("")
 end
 
 function win.On.OpenLinkButton.Clicked(ev)
@@ -765,7 +884,8 @@ function win.On.ResetButton.Clicked(ev)
     itm.Seed.Value = default_settings.SEED
     itm.Steps.Value = default_settings.STEPS
     itm.Guidance.Value = default_settings.GUIDANCE
-    itm.Interval.Value = default_settings.INTERVAL 
+    itm.Interval.Value = default_settings.INTERVAL
+    itm.StatusLabel.Text = default_settings.STATUS
 end
 
 function CloseAndSave()
