@@ -110,14 +110,15 @@ function get_remaining_credits(api_key)
         error("API key is not provided")
     end
 
-    local api_host = os.getenv("API_HOST") or "https://api.stability.ai"
-    local url = api_host .. "/v1/user/balance"
+    local baseURL = itm.BaseURL.Text ~= "" and itm.BaseURL.Text or itm.BaseURL.PlaceholderText
+    local url = "https://"..baseURL.."/v1/user/balance"
 
     local command = 'curl -f -sS "' .. url .. '" -H "Content-Type: application/json" -H "Authorization: Bearer ' .. api_key .. '"'
+    print(command)
     local handle = io.popen(command)
     local result = handle:read("*a")
     handle:close()
-
+    
     local json = require("dkjson")
     local payload, pos, err = json.decode(result, 1, nil)
 
@@ -180,7 +181,7 @@ function Generate_Image_V2(settings)
             base_command = base_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
         end
     
-        if model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
+        if model == "sd3.5-large" or model == "sd3.5-large-turbo" or model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
             base_command = base_command ..'-F mode="text-to-image" ' .. string.format('-F model="%s" ', model)
         end
     
@@ -188,20 +189,20 @@ function Generate_Image_V2(settings)
     
         return base_command
     end
-    
+    local baseURL = itm.BaseURL.Text ~= "" and itm.BaseURL.Text or itm.BaseURL.PlaceholderText
     local url
     local curl_command
     
     if settings.MODEL_V2 == "ultra" then
-        url = "https://api.stability.ai/v2beta/stable-image/generate/ultra"
+        url = "https://"..baseURL.."/v2beta/stable-image/generate/ultra"
         curl_command = generate_curl_command("ultra", url, settings, output_file)
     
     elseif settings.MODEL_V2 == "core" then
-        url = "https://api.stability.ai/v2beta/stable-image/generate/core"
+        url ="https://"..baseURL.."/v2beta/stable-image/generate/core"
         curl_command = generate_curl_command("core", url, settings, output_file)
     
-    elseif settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
-        url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+    elseif settings.MODEL_V2 == "sd3.5-large" or settings.MODEL_V2 == "sd3.5-large-turbo" or settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
+        url = "https://"..baseURL.."/v2beta/stable-image/generate/sd3"
         curl_command = generate_curl_command(settings.MODEL_V2, url, settings, output_file)
     
     else
@@ -225,8 +226,8 @@ end
 
 function Generate_Image_V1(settings,engine_id)
     updateStatus("Generating image...")
-
-    local url = "https://api.stability.ai/v1/generation/"..engine_id.."/text-to-image"
+    local baseURL = itm.BaseURL.Text ~= "" and itm.BaseURL.Text or itm.BaseURL.PlaceholderText
+    local url = "https://"..baseURL.."/v1/generation/"..engine_id.."/text-to-image"
     local count = 0
     local output_file
     local file_exists
@@ -652,6 +653,13 @@ win = disp:AddWindow(
                 ui:HGroup {
 
                     Weight = 0.05,
+                    ui:Label {ID = 'BaseURLLabel', Text = 'Base URL',Alignment = { AlignRight = false },Weight = 0.2},
+                    ui:LineEdit {ID = 'BaseURL', PlaceholderText = 'api.stability.ai',Weight = 0.6},    
+                    ui:Label {ID = 'BaseLabel', Text = '',Alignment = { AlignRight = false },Weight = 0.3},
+                },
+                ui:HGroup {
+
+                    Weight = 0.05,
                     ui:Label {ID = 'ApiKeyLabel', Text = 'API Key',Alignment = { AlignRight = false },Weight = 0.2},
                     ui:LineEdit {ID = 'ApiKey', Text = '',  EchoMode = 'Password',Weight = 0.8},    
                     ui:Button{ ID = 'Balance', Text = 'Balance', Weight = 0.2, },
@@ -714,7 +722,7 @@ function win.On.SamplerCombo.CurrentIndexChanged(ev)
     print('Using Sampler:' .. itm.SamplerCombo.CurrentText )
 end
 
-local MOdel = {'Stable Image Ultra','Stable Image Core', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
+local MOdel = {'Stable Image Ultra','Stable Image Core','Stable Diffusion 3.5 Large', 'Stable Diffusion 3.5 Large Turbo', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
 for _, modeL in ipairs(MOdel) do
     itm.ModelComboV2:AddItem(modeL)
 end
@@ -756,15 +764,9 @@ function win.On.FUCheckBox.Clicked(ev)
 
     end
 end
-
-function update_output_formats()
-
-end
-
-
 local model_id
 function update_output_formats()
-    if itm.ModelComboV2.CurrentIndex == 2 or itm.ModelComboV2.CurrentIndex == 3 or  itm.ModelComboV2.CurrentIndex == 4 then
+    if itm.ModelComboV2.CurrentIndex >= 2 then
         for i, format in ipairs(outputFormat) do
             if format == "webp" then
                 table.remove(outputFormat, i)
@@ -810,6 +812,7 @@ function update_output_formats()
 end
 
 function win.On.ModelComboV2.CurrentIndexChanged(ev)
+    itm.NegativePromptTxt.PlaceholderText = "Please Enter a Negative Prompt."
     itm.NegativePromptTxt.ReadOnly = false
     itm.StyleCombo.CurrentIndex = 0
     if itm.ModelComboV2.CurrentIndex == 0 then
@@ -820,13 +823,21 @@ function win.On.ModelComboV2.CurrentIndexChanged(ev)
         itm.StyleCombo.Enabled = true
     elseif itm.ModelComboV2.CurrentIndex == 2 then
         itm.StyleCombo.Enabled = false
-        model_id = 'sd3-large'
+        model_id = 'sd3.5-large'
     elseif itm.ModelComboV2.CurrentIndex == 3 then
+        itm.StyleCombo.Enabled = false
+        itm.NegativePromptTxt.Text = ''
+        model_id = 'sd3.5-large-turbo'
+    elseif itm.ModelComboV2.CurrentIndex == 4 then
+        itm.StyleCombo.Enabled = false
+        model_id = 'sd3-large'
+    elseif itm.ModelComboV2.CurrentIndex == 5 then
+        itm.NegativePromptTxt.PlaceholderText = "This parameter does not work with sd3-large-turbo."
         itm.NegativePromptTxt.ReadOnly = true
         itm.StyleCombo.Enabled = false
         itm.NegativePromptTxt.Text = ''
         model_id = 'sd3-large-turbo'
-    elseif itm.ModelComboV2.CurrentIndex == 4 then
+    elseif itm.ModelComboV2.CurrentIndex == 6 then
         itm.StyleCombo.Enabled = false
         model_id = 'sd3-medium'
     end
@@ -1135,7 +1146,7 @@ function win.On.Balance.Clicked(ev)
     local status, err = pcall(function()
         credits = get_remaining_credits(api_key)
     end)
-
+    
     if status then
         itm["BalanceLabel"].Text = "Credits: " .. credits
         print("Credits: " .. credits)
