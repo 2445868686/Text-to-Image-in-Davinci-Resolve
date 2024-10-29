@@ -181,7 +181,7 @@ function Generate_Image_V2(settings)
             base_command = base_command .. string.format('-F style_preset="%s" ', settings.STYLE_PRESET)
         end
     
-        if model == "sd3.5-large" or model == "sd3.5-large-turbo" or model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
+        if model == "sd3.5-large" or model == "sd3.5-large-turbo" or model == "sd3.5-medium" or model == "sd3-large" or model == "sd3-large-turbo" or model == "sd3-medium" then
             base_command = base_command ..'-F mode="text-to-image" ' .. string.format('-F model="%s" ', model)
         end
     
@@ -202,7 +202,7 @@ function Generate_Image_V2(settings)
         url ="https://"..baseURL.."/v2beta/stable-image/generate/core"
         curl_command = generate_curl_command("core", url, settings, output_file)
     
-    elseif settings.MODEL_V2 == "sd3.5-large" or settings.MODEL_V2 == "sd3.5-large-turbo" or settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
+    elseif settings.MODEL_V2 == "sd3.5-large" or settings.MODEL_V2 == "sd3.5-large-turbo" or settings.MODEL_V2 == "sd3.5-medium" or settings.MODEL_V2 == "sd3-large" or settings.MODEL_V2 == "sd3-large-turbo" or settings.MODEL_V2 == "sd3-medium" then
         url = "https://"..baseURL.."/v2beta/stable-image/generate/sd3"
         curl_command = generate_curl_command(settings.MODEL_V2, url, settings, output_file)
     
@@ -724,7 +724,7 @@ function win.On.SamplerCombo.CurrentIndexChanged(ev)
     print('Using Sampler:' .. itm.SamplerCombo.CurrentText )
 end
 
-local MOdel = {'Stable Image Ultra','Stable Image Core','Stable Diffusion 3.5 Large', 'Stable Diffusion 3.5 Large Turbo', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
+local MOdel = {'Stable Image Ultra','Stable Image Core','Stable Diffusion 3.5 Large', 'Stable Diffusion 3.5 Large Turbo','Stable Diffusion 3.5 Medium', 'Stable Diffusion 3 Large', 'Stable Diffusion 3 Large Turbo','Stable Diffusion 3 Medium'}
 for _, modeL in ipairs(MOdel) do
     itm.ModelComboV2:AddItem(modeL)
 end
@@ -869,14 +869,18 @@ function win.On.ModelComboV2.CurrentIndexChanged(ev)
         model_id = 'sd3.5-large-turbo'
     elseif itm.ModelComboV2.CurrentIndex == 4 then
         itm.StyleCombo.Enabled = false
-        model_id = 'sd3-large'
+        itm.NegativePromptTxt.Text = ''
+        model_id = 'sd3.5-medium'
     elseif itm.ModelComboV2.CurrentIndex == 5 then
+        itm.StyleCombo.Enabled = false
+        model_id = 'sd3-large'
+    elseif itm.ModelComboV2.CurrentIndex == 6 then
         itm.NegativePromptTxt.PlaceholderText = "This parameter does not work with sd3-large-turbo."
         itm.NegativePromptTxt.ReadOnly = true
         itm.StyleCombo.Enabled = false
         itm.NegativePromptTxt.Text = ''
         model_id = 'sd3-large-turbo'
-    elseif itm.ModelComboV2.CurrentIndex == 6 then
+    elseif itm.ModelComboV2.CurrentIndex == 7 then
         itm.StyleCombo.Enabled = false
         model_id = 'sd3-medium'
     end
